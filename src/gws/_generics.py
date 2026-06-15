@@ -28,8 +28,3 @@ class GenericWindow:
         '''Returns the size of the window'''
         ...
 
-    @abstractmethod
-    def get_name(self) -> str:
-        '''Returns the name (or title) of the window'''
-        ...
-
