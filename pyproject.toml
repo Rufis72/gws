@@ -1,0 +1,20 @@
+[project]
+name = "gws"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Rufis72",email = "milo.games.silverstein@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "pyautogui (>=0.9.54,<0.10.0)",
+    "wayland-automation (>=0.2.8,<0.3.0)"
+]
+
+[tool.poetry]
+packages = [{include = "gws", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

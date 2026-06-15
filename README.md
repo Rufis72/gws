@@ -1,0 +1,1 @@
+Note: On Wayland compositors, wayland-automation is used for mouse control, which requires wayland-info

@@ -1,0 +1,13 @@
+from typing import Callable
+
+from typing import Protocol
+
+class WindowLike(Protocol):
+    def get_name(self) -> str: ...
+    def get_position(self) -> tuple[int, int]: ...
+    def get_size(self) -> tuple[int, int]: ...
+
+class GetWindowFn(Protocol):
+    def __call__(self, name: str) -> WindowLike: ...
+
+

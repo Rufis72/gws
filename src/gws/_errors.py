@@ -1,0 +1,2 @@
+class InvalidWindowID(Exception):
+    pass
