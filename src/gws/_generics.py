@@ -1,70 +1,77 @@
 from abc import abstractmethod
 from gws._typing import WindowLike, GetWindowFn
+import wayland_automation
+import pyautogui
 
-class GenericWindow:
+class GenericWindowManager:
+    WAYLAND = False
+
     def __init__(self, id):
         '''
-        Initialises a window from it's id, and a function to get
-        the window for the window manager the system is using
+        The base class for every WindowManager class.
 
-        :param int id: The ID used to identify the window
+        A WindowManager class is something that provides
+        an API to interact with windows in the window manager
+        that class is being implemented for.
+
+        Or, without fancy wording, a Quartz (the MacOS window manager) WindowManager
+        class should interact with Quartz
         '''
-        self.id: str = id
 
     @abstractmethod 
-    def get_name(self) -> str:
-        '''Returns the current name of the window'''
+    def get_name_of_window(self, id: str) -> str:
+        '''Returns the current name of a window from it's ID
+        
+        :param str id: The ID to find the window by'''
         ...
 
     @abstractmethod
-    def get_position(self) -> tuple[int, int]:
-        '''Returns the absolute position of the window
+    def get_position_of_window(self, id: str) -> tuple[int, int]:
+        '''Returns the absolute position of a window from it's ID
         
-        Note: for people implementing this for wayland compositors, good luck!'''
+        Note: for people implementing this for wayland compositors, good luck!
+        :param str id: The ID to find the window by'''
         ...
     
     @abstractmethod
-    def get_size(self) -> tuple[int, int]:
-        '''Returns the size of the window'''
+    def get_size_of_window(self) -> tuple[int, int]:
+        '''Returns the size of the window from it's ID
+        
+        :param str id: The ID to find the window by'''
         ...
 
     @abstractmethod
-    def click(self, x: int, y: int, duration: float | int, type: str):
+    def click(self, x: int, y: int, duration: float | int, button: str):
         '''Either left, middle, or right clicks at a given position for duration time.
         
         :param int x: The x position of where to click
         :param int y: the y position of where to click
         :param float | int duration: How long to click for
-        :param str type: The type of click. Either 'left', 'middle', or 'right'.'''
-        ...
+        :param str button: The type of click. Either 'left', 'middle', or 'right'.'''
 
     @abstractmethod
-    def mouse_down(self, type: str):
+    def mouse_down(self, button: str):
         '''Presses a mouse button down.
         
-        :param str type: The mouse button to press down. Either 'middle', 'left', or 'right'.'''
-        ...
+        :param str button: The mouse button to press down. Either 'middle', 'left', or 'right'.'''
 
     @abstractmethod
-    def mouse_up(self, type: str):
+    def mouse_up(self, button: str):
         '''Unpresses a mouse button.
         
-        :param str type: The mouse button to release. Either 'middle', 'left', or 'right'.'''
-        ...
+        :param str button: The mouse button to release. Either 'middle', 'left', or 'right'.'''
 
     @abstractmethod
     def key_down(self, key: str):
         '''Presses a keyboard button
         
         :param str key: The key to press. Can be a typical character on the keyboard like 'a' or 'V', or a special character like 'enter'.'''
-        ...
     
     @abstractmethod
     def key_up(self, key: str):
         '''Releases a keyboard button
         
         :param str key: The key to release. Can be a typical character on the keyboard like 'a' or 'V', or a special character like 'enter'.'''
-        ...
 
     @abstractmethod
     def typewrite(self, text: str, hold_duration: float, spacing_duration: float):
@@ -73,4 +80,3 @@ class GenericWindow:
         :param str text: The text to typewrite
         :param float hold_duration: The duration to hold each key
         :param float spacing_duration: The duration to wait between each key press'''
-        ...
