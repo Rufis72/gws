@@ -6,7 +6,6 @@ from typing import Any, Final, ClassVar
 import subprocess
 import json
 import re
-import wayland_automation
 
 class Hyprland(GenericWindowManager):
     WAYLAND: ClassVar[bool] = True

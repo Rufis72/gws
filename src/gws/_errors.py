@@ -6,3 +6,6 @@ class UnsupportedWindowManager(Exception):
 
 class OutOfBoundsInputError(Exception):
     pass
+
+class DependencyNotFound(Exception):
+    pass
