@@ -1,7 +1,8 @@
-from typing import Callable, Protocol
+from typing import Callable, Protocol, ClassVar
 from typing_extensions import TypeAlias, Type
 
 class WindowLike(Protocol):
+    def __init__(self, window_manager: WindowManagerLike, id: str) -> None: ...
     def get_name(self) -> str: ...
     def get_position(self) -> tuple[int, int]: ...
     def get_size(self) -> tuple[int, int]: ...
@@ -10,7 +11,7 @@ class GetWindowFn(Protocol):
     def __call__(self, name: str) -> WindowLike: ...
 
 class WindowManagerLike(Protocol):
-    WAYLAND: bool
+    WAYLAND: ClassVar[bool]
     '''If the WindowManager uses Wayland. This is only used to see if WindowManager (or compositor for wayland)
     specific logic should be used for input'''
 

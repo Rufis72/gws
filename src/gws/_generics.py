@@ -1,10 +1,11 @@
 from abc import abstractmethod
 from gws._typing import WindowLike, GetWindowFn
+from typing import ClassVar, Final
 import wayland_automation
 import pyautogui
 
 class GenericWindowManager:
-    WAYLAND = False
+    WAYLAND: ClassVar[bool]
 
     def __init__(self, id):
         '''
@@ -34,7 +35,7 @@ class GenericWindowManager:
         ...
     
     @abstractmethod
-    def get_size_of_window(self) -> tuple[int, int]:
+    def get_size_of_window(self, id: str) -> tuple[int, int]:
         '''Returns the size of the window from it's ID
         
         :param str id: The ID to find the window by'''
