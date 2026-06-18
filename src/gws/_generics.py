@@ -108,14 +108,34 @@ class GenericWindowManager:
         :param str key: The key to release. Can be a typical character on the keyboard like 'a' or 'V', or a special character like 'enter'.'''
         ...
 
-    @abstractmethod
-    def typewrite(self, text: str, hold_duration: float, spacing_duration: float):
+    def press(self, key: str, duration: float):
+        '''Presses and holds a key for duration time.
+        
+        If you want to use modifiers, you can type them, so left control is 'lctrl',
+        or right shift as 'rshift'. If you want to add more modifiers while pressing
+        a key, then you should use key down and up, as we currently don't support that. Sorry!
+        
+        :param str key: The key to press
+        :param float duration: How long to hold the key'''
+        self.key_down(key)
+        time.sleep(duration)
+        self.key_up(key)
+
+    def typewrite(self, text: str, hold_duration: float, interval: float):
         '''Types characters, holding each one for a given time, and with a given duration between each key press.
         
         :param str text: The text to typewrite
         :param float hold_duration: The duration to hold each key
-        :param float spacing_duration: The duration to wait between each key press'''
-        ...
+        :param float interval: The duration to wait between each key press'''
+        for i, char in enumerate(text):
+            # pressing the key
+            self.press(char, hold_duration)
+
+            # waiting the interval between each key press unless this
+            # is the last character
+            if not i == len(text) + 1:
+                time.sleep(interval)
+        
 
 
 class GenericWaylandWindowManager(GenericWindowManager):
@@ -125,10 +145,10 @@ class GenericWaylandWindowManager(GenericWindowManager):
     def __init__(self):
         # setting up wayland_automation
         import wayland_automation
-        self.wayland_mouse = wayland_automation.Mouse()
-        self.wayland_keyboard = wayland_automation.Keyboard()
+        self.mouse = wayland_automation.Mouse()
+        self.keyboard = wayland_automation.Keyboard()
 
-    def _get_wayland_mouse_key_code(self, button: str):
+    def _get_mouse_key_code(self, button: str):
         if button.lower() == 'left':
             return 0x110
         elif button.lower() == 'right':
@@ -140,39 +160,39 @@ class GenericWaylandWindowManager(GenericWindowManager):
 
     def mouse_up(self, button: str, x: int | None = None, y: int | None = None):
         # first we get the key code
-        button_code = self._get_wayland_mouse_key_code(button)
+        button_code = self._get_mouse_key_code(button)
 
         # then we move the mouse if x and y is specificed
         if x is not None and y is not None:
             self.move_mouse(x, y)
 
         # then we send a press message
-        self.wayland_mouse.send_message(
-            self.wayland_mouse.current_virtual_pointer_id, 
+        self.mouse.send_message(
+            self.mouse.current_virtual_pointer_id, 
             2, 
-            struct.pack(f"{self.wayland_mouse.endianness}III", 0, button_code, 0)
+            struct.pack(f"{self.mouse.endianness}III", 0, button_code, 0)
         )
 
         # one frame after, we tell wayland the message is done
-        self.wayland_mouse.send_message(self.wayland_mouse.current_virtual_pointer_id, 4, b'') 
+        self.mouse.send_message(self.mouse.current_virtual_pointer_id, 4, b'') 
 
     def mouse_down(self, button: str, x: int | None = None, y: int | None = None):
         # first we get the key code
-        button_code = self._get_wayland_mouse_key_code(button)
+        button_code = self._get_mouse_key_code(button)
 
         # then we move the mouse if x and y is specificed
         if x is not None and y is not None:
             self.move_mouse(x, y)
 
         # then we send a press message
-        self.wayland_mouse.send_message(
-            self.wayland_mouse.current_virtual_pointer_id, 
+        self.mouse.send_message(
+            self.mouse.current_virtual_pointer_id, 
             2, 
-            struct.pack(f"{self.wayland_mouse.endianness}III", 0, button_code, 1)
+            struct.pack(f"{self.mouse.endianness}III", 0, button_code, 1)
         )
 
         # one frame after, we tell wayland the message is done
-        self.wayland_mouse.send_message(self.wayland_mouse.current_virtual_pointer_id, 4, b'') 
+        self.mouse.send_message(self.mouse.current_virtual_pointer_id, 4, b'') 
 
     def move_mouse(self, x: int, y: int):
         from wayland_automation.utils.screen_resolution import get_resolution
@@ -181,4 +201,12 @@ class GenericWaylandWindowManager(GenericWindowManager):
         # not sure what it means, but wayland-automations does it
         # it internally in mouse_controller.py
         height, width = get_resolution()
-        self.wayland_mouse.send_motion_absolute(x, y, int(height), int(width))
+        self.mouse.send_motion_absolute(x, y, int(height), int(width))
+
+    def key_down(self, key: str):
+        self.keyboard.keyDown(key)
+
+    def key_up(self, key: str):
+        self.keyboard.keyUp(key)
+
+    
