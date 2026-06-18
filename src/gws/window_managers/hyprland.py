@@ -1,13 +1,13 @@
-from gws._generics import GenericWindowManager
+from gws._generics import GenericWaylandWindowManager
 from gws.window import BasicWindow
 from gws._typing import WindowLikeType, WindowLike
 from gws._errors import InvalidWindowID
-from typing import Any, Final, ClassVar
+from typing import Any, ClassVar
 import subprocess
 import json
 import re
 
-class Hyprland(GenericWindowManager):
+class Hyprland(GenericWaylandWindowManager):
     WAYLAND: ClassVar[bool] = True
 
     def _get_all_window_data(self) -> list[dict[str, Any]]:
