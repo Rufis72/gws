@@ -1,8 +1,10 @@
 from abc import abstractmethod
 from gws._typing import WindowLike, GetWindowFn
 from typing import ClassVar, Final
-import wayland_automation
-import pyautogui
+try:
+    import pyautogui
+except:
+    import wayland_automation
 
 class GenericWindowManager:
     WAYLAND: ClassVar[bool]
@@ -41,7 +43,6 @@ class GenericWindowManager:
         :param str id: The ID to find the window by'''
         ...
 
-    @abstractmethod
     def click(self, x: int, y: int, duration: float | int, button: str):
         '''Either left, middle, or right clicks at a given position for duration time.
         
@@ -49,6 +50,11 @@ class GenericWindowManager:
         :param int y: the y position of where to click
         :param float | int duration: How long to click for
         :param str button: The type of click. Either 'left', 'middle', or 'right'.'''
+        # if we're on wayland, we use wayland automation to click
+        if self.WAYLAND:
+            wayland_automation.click(x, y, button)
+        else:
+            pyautogui.click(x, y, button=button, duration=duration)
 
     @abstractmethod
     def mouse_down(self, button: str):
