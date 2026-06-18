@@ -3,3 +3,6 @@ class InvalidWindowID(Exception):
 
 class UnsupportedWindowManager(Exception):
     pass
+
+class OutOfBoundsInputError(Exception):
+    pass
