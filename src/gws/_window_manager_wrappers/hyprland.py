@@ -122,6 +122,3 @@ class Hyprland(GenericWindowManager):
         
         # returning the position
         return window_name
-    
-    def key_down(self, key: str):
-        return super().key_down(key)
