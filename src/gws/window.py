@@ -36,3 +36,15 @@ class BasicWindow:
 
         # then we click
         self.window_manager.click(x + window_position[0], y + window_position[1], duration, button)
+
+    def get_name(self) -> str:
+        '''Returns the current name of this window'''
+        return self.window_manager.get_name_of_window(self.id)
+    
+    def get_position(self) -> tuple[int, int]:
+        '''Returns the current global position of the window'''
+        return self.window_manager.get_position_of_window(self.id)
+    
+    def get_size(self) -> tuple[int, int]:
+        '''Returns the current size of the window'''
+        return self.window_manager.get_size_of_window(self.id)
