@@ -215,6 +215,18 @@ files = [
 ]
 
 [[package]]
+name = "typing-extensions"
+version = "4.15.0"
+description = "Backported and Experimental Type Hints for Python 3.9+"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"},
+    {file = "typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"},
+]
+
+[[package]]
 name = "wayland-automation"
 version = "0.2.8"
 description = "A tool for automating Wayland tasks using system packages wtype and wayland-info"
@@ -232,4 +244,4 @@ evdev = "*"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.14"
-content-hash = "b666ff74d2821b3869b8d2da7702033d4dad2af1e01f8a71b44ce0507dd16664"
+content-hash = "73c62f103869c4a106bce0c3320e6626882e9442ae6c568e59b67d32c7c62fa8"
