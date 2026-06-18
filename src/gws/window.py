@@ -1,4 +1,4 @@
-from gws._typing import WindowManagerLike
+from gws._typing import WindowManagerLike, WindowLike
 from gws._errors import OutOfBoundsInputError
 
 class BasicWindow:
@@ -11,7 +11,7 @@ class BasicWindow:
         self.window_manager: WindowManagerLike = window_manager
         self.id: str = id
 
-    def click_at(self, x: int, y: int, button: str, duration: float = 0.09, bypass_out_of_bounds_check: bool = False):
+    def click(self, x: int, y: int, button: str, duration: float = 0.09, bypass_out_of_bounds_check: bool = False):
         '''Clicks at a position relative to the window.
         Raises an error if the click is out of bounds of the window.
         
