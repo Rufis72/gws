@@ -17,7 +17,7 @@ class Hyprland(GenericWindowManager):
         A.k.a. it returns all the "clients" (windows) and their properties'''
         # calling hyprctl
         # note: this is the string version of the json
-        text_window_data: str = subprocess.run(['hyprctl', '-j', 'clients'], stdout=subprocess.PIPE).stdout
+        text_window_data: bytes = subprocess.run(['hyprctl', '-j', 'clients'], stdout=subprocess.PIPE).stdout
 
         # getting the dict version
         dict_window_data: list[dict[str, Any]] = json.loads(text_window_data)
@@ -98,24 +98,24 @@ class Hyprland(GenericWindowManager):
         window_data = self._get_window_data(id)
 
         # getting the position
-        window_position: list[int] = window_data.get('at') 
+        window_position: tuple[int, int] = window_data.get('at') 
         
         # returning the position
-        return tuple(window_position)
+        return window_position
     
-    def get_size(self) -> tuple[int, int]:
+    def get_size_of_window(self, id) -> tuple[int, int]:
         # getting the all window data
-        window_data = self._get_window_data()
+        window_data = self._get_window_data(id)
 
         # getting the size
-        window_size: list[int] = window_data.get('size') 
+        window_size: tuple[int, int] = window_data.get('size') 
         
         # returning the position
-        return tuple(window_size)
+        return window_size
     
-    def get_name(self) -> tuple[int, int]:
+    def get_name_of_window(self, id) -> str:
         # getting the all window data
-        window_data = self._get_window_data()
+        window_data = self._get_window_data(id)
 
         # getting the size
         window_name: str = window_data.get('title') 
