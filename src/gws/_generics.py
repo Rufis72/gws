@@ -7,7 +7,7 @@ import pyautogui
 class GenericWindowManager:
     WAYLAND: ClassVar[bool]
 
-    def __init__(self, id):
+    def __init__(self):
         '''
         The base class for every WindowManager class.
 
