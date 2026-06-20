@@ -235,13 +235,13 @@ class GenericWaylandWindowManager(GenericWindowManager):
                     monitor_data_dict['output_transform'] = value_text[1].lstrip('output_transform: ')
 
                 # if it's the width and such
-                if line.__contains__('width: '):
+                if line.__contains__('width: ') and not line.__contains__('physical'):
                     value_text = line.rstrip(',').split(', ')
 
                     # the first in the values text is the width, height, then refresh rate
-                    monitor_data_dict['width'] = int(value_text[0].lstrip('width: '))
-                    monitor_data_dict['height'] = int(value_text[1].lstrip('height: '))
-                    monitor_data_dict['refresh_rate'] = float(value_text[2].lstrip('refresh: '))
+                    monitor_data_dict['width'] = int(value_text[0].lstrip('width: ').rstrip(' px'))
+                    monitor_data_dict['height'] = int(value_text[1].lstrip('height: ').rstrip(' px'))
+                    monitor_data_dict['refresh_rate'] = float(value_text[2].lstrip('refresh: ').rstrip(' Hz'))
 
             # adding the finished monitor dict to the list
             monitor_data.append(monitor_data_dict)
