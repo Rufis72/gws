@@ -4,7 +4,10 @@ import time
 import subprocess
 from gws._errors import DependencyNotFound
 from gws.window import BasicWindow
-from gws._typing import WindowLikeType, WindowLike
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from gws._typing import WindowLikeType, WindowLike
 
 class GenericWindowManager(metaclass=ABCMeta):
     '''

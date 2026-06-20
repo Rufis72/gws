@@ -1,11 +1,13 @@
 from gws._generics import GenericWaylandWindowManager
 from gws.window import BasicWindow
-from gws._typing import WindowLikeType, WindowLike
 from gws._errors import InvalidWindowID
-from typing import Any, ClassVar
+from typing import Any, TYPE_CHECKING
 import subprocess
 import json
 import re
+
+if TYPE_CHECKING:
+    from gws._typing import WindowLikeType, WindowLike
 
 class Hyprland(GenericWaylandWindowManager):
     def _get_all_window_data(self) -> list[dict[str, Any]]:
