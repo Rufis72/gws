@@ -246,6 +246,9 @@ class GenericWaylandWindowManager(GenericWindowManager):
             # adding the finished monitor dict to the list
             monitor_data.append(monitor_data_dict)
 
+        # returning the final data
+        return monitor_data
+
     def get_screen_space_rectangle(self) -> tuple[int, int]:
         '''This takes however the user has arranged their screens
         and their sizes and turns it into one big rect for the total screen size.
