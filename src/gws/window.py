@@ -49,6 +49,14 @@ class BasicWindow:
         :param str key: The key to release'''
         self.window_manager.key_up(key)
 
+    def press(self, key: str, duration: float):
+        '''Presses and holds a key for duration time.
+        
+        :param str key: The key to press
+        :param float duration: How long to hold the key
+        '''
+        self.window_manager.press(key, duration)
+
     def get_name(self) -> str:
         '''Returns the current name of this window'''
         return self.window_manager.get_name_of_window(self.id)

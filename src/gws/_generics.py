@@ -112,30 +112,10 @@ class GenericWindowManager:
 
     def press(self, key: str, duration: float):
         '''Presses and holds a key for duration time.
-  
-
-    def get_position_of_window(self, id) -> tuple[int, int]:
-        # getting the data of all windows
-        window_data = self._get_window_data(id)
-
-        # getting the position
-        window_position: tuple[int, int] = window_data.get('at') 
-        
-        # returning the position
-        return window_position
-    
-    def get_size_of_window(self, id) -> tuple[int, int]:
-        # getting the all window data
-        window_data = self._get_window_data(id)
-
-        # getting the size
-        window_size: tupl      
-        If you want to use modifiers, you can type them, so left control is 'lctrl',
-        or right shift as 'rshift'. If you want to add more modifiers while pressing
-        a key, then you should use key down and up, as we currently don't support that. Sorry!
         
         :param str key: The key to press
-        :param float duration: How long to hold the key'''
+        :param float duration: How long to hold the key
+        '''
         self.key_down(key)
         time.sleep(duration)
         self.key_up(key)
