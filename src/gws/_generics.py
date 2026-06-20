@@ -168,28 +168,31 @@ class GenericWaylandWindowManager(GenericWindowManager):
         self.keyboard = wayland_automation.Keyboard()
 
     def get_monitor_data(self) -> list[dict[str, str | int | float]]:
-        '''Returns the data from wayland-info -i wl_output, and parses it to
+        '''Returns the data from wayland-info -i zxdg_output_manager_v1, and parses it to
         be more usable'''
         # first we call wayland-info and get the data for the displays
         try:
-            wayland_info_output = subprocess.run(['wayland-info', '-i', 'wl_output'], check=True, text=True, capture_output=True).stdout
+            wayland_info_output = subprocess.run(['wayland-info', '-i', 'zxdg_output_manager_v1'], check=True, text=True, capture_output=True).stdout
         except subprocess.CalledProcessError as e:
             # if it's wayland-info not found, we say that the dependency couldn't be found.
             # otherwise we just pass the error along to the user
             if str(e.stderr).__contains__('wayland-info: command not found'):
                 raise DependencyNotFound(f'An error was encountered when trying to run wayland-info, which appears to be related to it not being on PATH/not being installed. Do you have wayland-info installed? This is the given error message: \n{e}')
             else:
-                raise Exception(f'Got an error when running "wayland-info -i wl_output": {e}')
+                raise Exception(f'Got an error when running "wayland-info -i zxdg_output_manager": {e}')
             
         # parsing the screen data
         # first we get the interface data for each monitor
         # we remove the first one because that's before the interface. So it's ['', '...', ...]
         # and we want ['...', ...]
-        monitor_interfaces_data: list[str] = wayland_info_output.split('interface: \'wl_output\'')[1:]
+        monitor_interfaces_data: list[str] = wayland_info_output.split('xdg_output_v1')[1:]
 
         # next we go through each monitor's data and turn it into a dict
         monitor_data: list[dict[str, int | str | float]] = []
         for monitor_text in monitor_interfaces_data:
+            # cleaning up any empty lines above and below
+            monitor_text = monitor_text.strip()
+
             # making a dict for this monitor
             monitor_data_dict = {}
 
@@ -204,11 +207,11 @@ class GenericWaylandWindowManager(GenericWindowManager):
                     monitor_data_dict['name'] = line.split(': ')[1]
 
                 # if it's the description
-                if line.__contains__('description'):
-                    monitor_data_dict['description'] = line.split(': ')[1]
+                elif line.__contains__('description'):
+                    monitor_data_dict['description'] = line.split(': ')[1].strip('\'')
 
                 # if it's the position data
-                if line.__contains__('x: '):
+                elif line.__contains__('logical_x: '):
                     # this one's a little different, since there's
                     # multiple values on one line
                     # I couldn't think of a better name for the variable,
@@ -216,34 +219,16 @@ class GenericWaylandWindowManager(GenericWindowManager):
                     value_text = line.rstrip(',').split(', ')
 
                     # the first in the values text is the x, second is y, third is scale
-                    monitor_data_dict['x'] = int(value_text[0].lstrip('x: '))
-                    monitor_data_dict['y'] = int(value_text[1].lstrip('y: '))
-                    monitor_data_dict['scale'] = float(value_text[2].lstrip('scale: '))
-
-                # if it's the physical dimensions
-                if line.__contains__('physical_width: '):
-                    value_text = line.rstrip(',').split(', ')
-
-                    # the first in the values text is the physical width, then physical height
-                    monitor_data_dict['physical_width'] = value_text[0].lstrip('physical_width: ')
-                    monitor_data_dict['physical_height'] = value_text[1].lstrip('physical_height: ')
-
-                # if it's the subpixel orientation and output_transform
-                if line.__contains__('subpixel_orientation'):
-                    value_text = line.rstrip(',').split(', ')
-
-                    # the first in the values text is the subpixel orientation, then output_transform
-                    monitor_data_dict['subpixel_orientation'] = value_text[0].lstrip('subpixel_orientation: ')
-                    monitor_data_dict['output_transform'] = value_text[1].lstrip('output_transform: ')
-
+                    monitor_data_dict['x'] = int(value_text[0].lstrip('logical_x: '))
+                    monitor_data_dict['y'] = int(value_text[1].lstrip('logical_y: '))
+                
                 # if it's the width and such
-                if line.__contains__('width: ') and not line.__contains__('physical'):
+                elif line.__contains__('logical_width: ') and not line.__contains__('physical'):
                     value_text = line.rstrip(',').split(', ')
 
-                    # the first in the values text is the width, height, then refresh rate
-                    monitor_data_dict['width'] = int(value_text[0].lstrip('width: ').rstrip(' px'))
-                    monitor_data_dict['height'] = int(value_text[1].lstrip('height: ').rstrip(' px'))
-                    monitor_data_dict['refresh_rate'] = float(value_text[2].lstrip('refresh: ').rstrip(' Hz'))
+                    # the first in the values text is the width, height, then rate
+                    monitor_data_dict['width'] = int(value_text[0].lstrip('logical_width: '))
+                    monitor_data_dict['height'] = int(value_text[1].lstrip('logical_height: '))
 
             # adding the finished monitor dict to the list
             monitor_data.append(monitor_data_dict)
@@ -270,8 +255,8 @@ class GenericWaylandWindowManager(GenericWindowManager):
         x_data: list[int] = []
         y_data: list[int] = []
         for monitor in monitor_info:
-            x_data.append((monitor.get('width') * monitor.get('scale')) + monitor.get('x'))
-            y_data.append((monitor.get('height') * monitor.get('scale')) + monitor.get('y'))
+            x_data.append(monitor.get('width') + monitor.get('x'))
+            y_data.append(monitor.get('height') + monitor.get('y'))
 
         # returning the biggest of both groups
         return (max(x_data), max(y_data))
