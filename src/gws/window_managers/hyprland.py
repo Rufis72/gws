@@ -8,8 +8,6 @@ import json
 import re
 
 class Hyprland(GenericWaylandWindowManager):
-    WAYLAND: ClassVar[bool] = True
-
     def _get_all_window_data(self) -> list[dict[str, Any]]:
         '''Returns the data given by 'hyprctl -j clients' as a dict
         
