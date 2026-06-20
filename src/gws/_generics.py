@@ -1,10 +1,10 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 import struct
 import time
 import subprocess
 from gws._errors import DependencyNotFound
 
-class GenericWindowManager:
+class GenericWindowManager(ABCMeta):
     '''
     The base class for every WindowManager class.
 
@@ -46,10 +46,6 @@ class GenericWindowManager:
         :param int y: The absolute y position to move the mouse to'''
         ...
 
-    def _move_mouse_non_wayland(self, x: int, y: int):
-        import pyautogui
-        pyautogui.moveTo(x, y)
-
     def click(self, x: int, y: int, duration: float, button: str):
         '''Either left, middle, or right clicks at a given position for duration time.
         
@@ -60,18 +56,6 @@ class GenericWindowManager:
         self.mouse_down(button, x, y)
         time.sleep(duration)
         self.mouse_up(button)
-
-    def _click_non_wayland(self, x: int, y: int, duration: float, button: str):
-        '''Either left, middle, or right clicks at a given position for duration time.
-
-        This is the non-wayland speciifc version, and will crash if run on a system running wayland
-        
-        :param int x: The x position of where to click
-        :param int y: the y position of where to click
-        :param float duration: How long to click for
-        :param str button: The type of click. Either 'left', 'middle', or 'right'.'''
-        import pyautogui
-        pyautogui.click(x, y, duration=duration, button=button)
 
     @abstractmethod
     def mouse_down(self, button: str, x: int | None = None, y: int | None = None):
@@ -313,9 +297,4 @@ class GenericWaylandWindowManager(GenericWindowManager):
                 raise DependencyNotFound(f'An error was encountered when trying to run wtype, which appears to be related to it not being on PATH/not being installed. Do you have wtype installed? This is the given error message: \n{e}')
             else:
                 raise Exception(f'Got an error when running "wtype -p {key}": {e}')
-            
 
-class GenericNonWaylandWindowManager(GenericWindowManager):
-    def __init__(self) -> None:
-        import pyautogui
-        pyautogui.
