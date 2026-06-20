@@ -183,7 +183,9 @@ class GenericWaylandWindowManager(GenericWindowManager):
             
         # parsing the screen data
         # first we get the interface data for each monitor
-        monitor_interfaces_data: list[str] = wayland_info_output.split('interface: \'wl_output\'')
+        # we remove the first one because that's before the interface. So it's ['', '...', ...]
+        # and we want ['...', ...]
+        monitor_interfaces_data: list[str] = wayland_info_output.split('interface: \'wl_output\'')[1:]
 
         # next we go through each monitor's data and turn it into a dict
         monitor_data: list[dict[str, int | str | float]] = []
