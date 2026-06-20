@@ -112,7 +112,7 @@ class GenericWindowManager:
 
     def press(self, key: str, duration: float):
         '''Presses and holds a key for duration time.
-        
+
         :param str key: The key to press
         :param float duration: How long to hold the key
         '''
@@ -301,7 +301,7 @@ class GenericWaylandWindowManager(GenericWindowManager):
             subprocess.run(['wtype', '-P', key], check=True)
         except subprocess.CalledProcessError as e:
             if str(e.stderr).__contains__('wtype: command not found'):
-                raise DependencyNotFound(f'An error was encountered when trying to run wtype, which appears to be related to it not being on PATH/not being installed. Do you have wayland-info installed? This is the given error message: \n{e}')
+                raise DependencyNotFound(f'An error was encountered when trying to run wtype, which appears to be related to it not being on PATH/not being installed. Do you have wtype installed? This is the given error message: \n{e}')
             else:
                 raise Exception(f'Got an error when running "wtype -P {key}": {e}')
 
@@ -310,6 +310,12 @@ class GenericWaylandWindowManager(GenericWindowManager):
             subprocess.run(['wtype', '-p', key])
         except subprocess.CalledProcessError as e:
             if str(e.stderr).__contains__('wtype: command not found'):
-                raise DependencyNotFound(f'An error was encountered when trying to run wtype, which appears to be related to it not being on PATH/not being installed. Do you have wayland-info installed? This is the given error message: \n{e}')
+                raise DependencyNotFound(f'An error was encountered when trying to run wtype, which appears to be related to it not being on PATH/not being installed. Do you have wtype installed? This is the given error message: \n{e}')
             else:
                 raise Exception(f'Got an error when running "wtype -p {key}": {e}')
+            
+
+class GenericNonWaylandWindowManager(GenericWindowManager):
+    def __init__(self) -> None:
+        import pyautogui
+        pyautogui.
