@@ -223,8 +223,8 @@ class GenericWaylandWindowManager(GenericWindowManager):
                     value_text = line.rstrip(',').split(', ')
 
                     # the first in the values text is the physical width, then physical height
-                    monitor_data_dict['physical_width'] = int(value_text[0].lstrip('physical_width: '))
-                    monitor_data_dict['physical_height'] = int(value_text[1].lstrip('physical_height: '))
+                    monitor_data_dict['physical_width'] = value_text[0].lstrip('physical_width: ')
+                    monitor_data_dict['physical_height'] = value_text[1].lstrip('physical_height: ')
 
                 # if it's the subpixel orientation and output_transform
                 if line.__contains__('subpixel_orientation'):
@@ -320,12 +320,10 @@ class GenericWaylandWindowManager(GenericWindowManager):
         self.mouse.send_message(self.mouse.current_virtual_pointer_id, 4, b'') 
 
     def move_mouse(self, x: int, y: int):
-        from wayland_automation.utils.screen_resolution import get_resolution
-
         # getting the resolution
         # not sure what it means, but wayland-automations does it
         # it internally in mouse_controller.py
-        height, width = get_resolution()
+        height, width = self.get_screen_space_rectangle()
         self.mouse.send_motion_absolute(x, y, 2560 + 1920, 1440)
 
     def key_down(self, key: str):
