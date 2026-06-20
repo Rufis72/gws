@@ -37,6 +37,18 @@ class BasicWindow:
         # then we click
         self.window_manager.click(x + window_position[0], y + window_position[1], duration, button)
 
+    def key_down(self, key: str):
+        '''Presses a key down
+
+        :param str key: The key to press'''
+        self.window_manager.key_down(key)
+
+    def key_up(self, key: str):
+        '''Releases a key
+        
+        :param str key: The key to release'''
+        self.window_manager.key_up(key)
+
     def get_name(self) -> str:
         '''Returns the current name of this window'''
         return self.window_manager.get_name_of_window(self.id)
@@ -48,3 +60,11 @@ class BasicWindow:
     def get_size(self) -> tuple[int, int]:
         '''Returns the current size of the window'''
         return self.window_manager.get_size_of_window(self.id)
+    
+    def typewrite(self, text: str, hold_duration: float = 0.09, spacing_duration: float = 0):
+        '''Types characters, holding each one for a given time, and with a given duration between each key press.
+        
+        :param str text: The text to typewrite
+        :param float hold_duration: The duration to hold each key
+        :param float interval: The duration to wait between each key press'''
+        self.window_manager.typewrite(text, hold_duration, spacing_duration)

@@ -317,7 +317,19 @@ class GenericWaylandWindowManager(GenericWindowManager):
         self.mouse.send_motion_absolute(x, y, 2560 + 1920, 1440)
 
     def key_down(self, key: str):
-        self.keyboard.keyDown(key)
+        try:
+            subprocess.run(['wtype', '-P', key], check=True)
+        except subprocess.CalledProcessError as e:
+            if str(e.stderr).__contains__('wtype: command not found'):
+                raise DependencyNotFound(f'An error was encountered when trying to run wtype, which appears to be related to it not being on PATH/not being installed. Do you have wayland-info installed? This is the given error message: \n{e}')
+            else:
+                raise Exception(f'Got an error when running "wtype -P {key}": {e}')
 
     def key_up(self, key: str):
-        self.keyboard.keyUp(key)
+        try:
+            subprocess.run(['wtype', '-p', key])
+        except subprocess.CalledProcessError as e:
+            if str(e.stderr).__contains__('wtype: command not found'):
+                raise DependencyNotFound(f'An error was encountered when trying to run wtype, which appears to be related to it not being on PATH/not being installed. Do you have wayland-info installed? This is the given error message: \n{e}')
+            else:
+                raise Exception(f'Got an error when running "wtype -p {key}": {e}')
