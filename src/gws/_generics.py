@@ -297,3 +297,28 @@ class GenericWaylandWindowManager(GenericWindowManager):
                 raise DependencyNotFound(f'An error was encountered when trying to run wtype, which appears to be related to it not being on PATH/not being installed. Do you have wtype installed? This is the given error message: \n{e}')
             else:
                 raise Exception(f'Got an error when running "wtype -p {key}": {e}')
+            
+
+
+       
+
+class GenericNonWaylandWindowManager(GenericWindowManager):
+    def key_down(self, key: str):
+        import pyautogui
+        pyautogui.keyDown(key)
+
+    def key_up(self, key: str):
+        import pyautogui
+        pyautogui.keyUp(key)
+
+    def mouse_down(self, button: str, x: int | None = None, y: int | None = None):
+        import pyautogui
+        pyautogui.mouseDown(x, y, button)
+
+    def mouse_up(self, button: str):
+        import pyautogui
+        pyautogui.mouseUp(button=button)
+
+    def move_mouse(self, x: int, y: int):
+        import pyautogui
+        pyautogui.moveTo(x, y)
