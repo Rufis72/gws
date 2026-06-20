@@ -4,7 +4,7 @@ import time
 import subprocess
 from gws._errors import DependencyNotFound
 
-class GenericWindowManager(ABCMeta):
+class GenericWindowManager(metaclass=ABCMeta):
     '''
     The base class for every WindowManager class.
 
@@ -297,4 +297,3 @@ class GenericWaylandWindowManager(GenericWindowManager):
                 raise DependencyNotFound(f'An error was encountered when trying to run wtype, which appears to be related to it not being on PATH/not being installed. Do you have wtype installed? This is the given error message: \n{e}')
             else:
                 raise Exception(f'Got an error when running "wtype -p {key}": {e}')
-
