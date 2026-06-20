@@ -1,5 +1,8 @@
-from gws._typing import WindowManagerLike, WindowLike
+from typing import TYPE_CHECKING
 from gws._errors import OutOfBoundsInputError
+
+if TYPE_CHECKING:
+    from gws._typing import WindowManagerLike
 
 class BasicWindow:
     '''The basic window object. Represents a window for any WindowManager'''

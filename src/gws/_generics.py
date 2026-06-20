@@ -3,6 +3,8 @@ import struct
 import time
 import subprocess
 from gws._errors import DependencyNotFound
+from gws.window import BasicWindow
+from gws._typing import WindowLikeType, WindowLike
 
 class GenericWindowManager(metaclass=ABCMeta):
     '''
@@ -15,6 +17,27 @@ class GenericWindowManager(metaclass=ABCMeta):
     Or, as an example, a Quartz (the MacOS window manager) WindowManager
     class should interact with Quartz
     '''
+
+    @abstractmethod
+    def get_window_from_name(self, name: str, ignore_capitalization: bool = False, window_type: WindowLikeType = BasicWindow) -> WindowLike | None:
+        '''Checks the name of every window, if the given name exactly
+        matches the window name, a HyprlandWindow object is return of it.
+        Otherwise, None is returned
+
+        :param str name: The name to look for exact matches to
+        :param bool ignore_capitalization: If capitalization should be ignored when looking for matches
+        :param WindowLikeType window_type: The type of window to initialize from the name. By default is the BasicWindow'''
+        ...
+
+    @abstractmethod
+    def get_window_from_regex(self, pattern: str, window_type: WindowLikeType = BasicWindow) -> WindowLike | None:
+        '''Checks the name of every window for a match against the given pattern.
+        If a match is found, a window object is returned of that window.
+        
+        :param str pattern: The regex pattern to check against
+        :param WindowLikeType window_type: The type of window to initialize from the regex. By default is the BasicWindow
+        '''
+        ...
 
     @abstractmethod 
     def get_name_of_window(self, id: str) -> str:
