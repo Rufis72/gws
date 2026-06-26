@@ -19,6 +19,7 @@ packages = [{include = "gws", from = "src"}]
 
 [tool.poetry.dependencies]
 wayland-automation = {version = ">=0.2.8,<0.3.0", markers = "sys_platform == 'linux' or sys_platform == 'linux2'"}
+pyobc = {version = ">=12.2.1,<13.0.0", markers = "sys_platform == 'darwin'"}
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
