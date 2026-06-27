@@ -5,6 +5,7 @@ import subprocess
 from gws._errors import DependencyNotFound
 from gws.window import BasicWindow
 from typing import TYPE_CHECKING
+from PIL.Image import Image as image_type
 
 if TYPE_CHECKING:
     from gws._typing import WindowLikeType, WindowLike
@@ -144,6 +145,27 @@ class GenericWindowManager(metaclass=ABCMeta):
             # is the last character
             if not i == len(text) + 1:
                 time.sleep(interval)
+
+    @abstractmethod
+    def screenshot(self) -> image_type:
+        '''Takes a screenshot of all monitors. Returns it as a PIL Image object'''
+        ...
+
+    def screenshot_region(self, x: int, y: int, width: int, height: int) -> image_type:
+        '''Takes a screenshot of a specific region on your computer. 
+        The image is a rectangle from (x, y) to (x + width, y + height)
+
+        It depends on the window manager, but typically (0, 0) is in the top left corner,
+        and bigger x is more to the right, and bigger y is downward.
+        This should be normalized across all window managers that it's top left is (0, 0),
+        but if things are flipped, that's probably why. (either that or something is seriously
+        broken)
+        
+        :param int x: The starting x for the rectangle
+        :param int y: The starting y for the rectangle
+        :param int width the width of the rectangle
+        :param int height the height of the rectangle:'''
+        ...
         
 
 
@@ -348,3 +370,11 @@ class GenericNonWaylandWindowManager(GenericWindowManager):
     def move_mouse(self, x: int, y: int):
         import pyautogui
         pyautogui.moveTo(x, y)
+
+    def screenshot(self) -> image_type:
+        import pyautogui
+        return pyautogui.screenshot()
+    
+    def screenshot_region(self, x: int, y: int, width: int, height: int) -> image_type:
+        import pyautogui
+        return pyautogui.screenshot(region=(x, y, width, height))
