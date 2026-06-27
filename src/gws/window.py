@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 from gws._errors import OutOfBoundsInputError
+from PIL.Image import Image as image_type
 
 if TYPE_CHECKING:
     from gws._typing import WindowManagerLike
@@ -79,3 +80,34 @@ class BasicWindow:
         :param float hold_duration: The duration to hold each key
         :param float interval: The duration to wait between each key press'''
         self.window_manager.typewrite(text, hold_duration, spacing_duration)
+
+    def screenshot(self) -> image_type:
+        '''Takes a screenshot of the entire window, returns it as a Pillow Image.'''
+        # getting data about the window and saving it to a variable, so we don't have
+        # to redo requests
+        window_size = self.get_size()
+        window_position = self.get_position()
+
+        # taking a screenshot and returning it
+        return self.window_manager.screenshot_region(*window_position, window_position[0] + window_size[0], window_position[1] + window_size[1])
+    
+    def screenshot_region(self, x: int, y: int, width: int, height: int) -> image_type:
+        '''Takes a screenshot of a region of the window. If the region would be outside of the window, a OutOfBoundsInputError is raised.
+        
+        If you want to take a screenshot that spans more than window, use your window manager's screenshot 
+        or screenshot_region methods instead.
+        :param int x: The starting x for the screenshot region
+        :param int y: The starting y for the screenshot region
+        :param int width the width of the screenshot region
+        :param int height the height of the screenshot region:'''
+        # getting data about the window and saving it to a variable, so we don't have
+        # to redo requests
+        window_size = self.get_size()
+        window_position = self.get_position()
+
+        # making sure that the screenshot region isn't outside of the size of the window
+        if x + width > window_size[0] or y + height > window_size[1]:
+            raise OutOfBoundsInputError(f'The final end position of the region ({x + width}, {y + height})to take the screenshot of is outside the size of the window. {window_position} If you want to take a screenshot of more than one window, use your window manager\'s screenshot or screenshot_region methods.')
+
+        # taking a screenshot and returning it
+        return self.window_manager.screenshot_region(window_position[0] + x, window_position[1] + x, window_position[0] + width, window_position[1] + height)
