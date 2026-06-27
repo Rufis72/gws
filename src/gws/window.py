@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 from gws._errors import OutOfBoundsInputError
-from PIL.Image import Image as image_type
+from PIL import Image
 
 if TYPE_CHECKING:
     from gws._typing import WindowManagerLike
@@ -81,7 +81,7 @@ class BasicWindow:
         :param float interval: The duration to wait between each key press'''
         self.window_manager.typewrite(text, hold_duration, spacing_duration)
 
-    def screenshot(self) -> image_type:
+    def screenshot(self) -> Image.Image:
         '''Takes a screenshot of the entire window, returns it as a Pillow Image.'''
         # getting data about the window and saving it to a variable, so we don't have
         # to redo requests
@@ -91,7 +91,7 @@ class BasicWindow:
         # taking a screenshot and returning it
         return self.window_manager.screenshot_region(*window_position, window_position[0] + window_size[0], window_position[1] + window_size[1])
     
-    def screenshot_region(self, x: int, y: int, width: int, height: int) -> image_type:
+    def screenshot_region(self, x: int, y: int, width: int, height: int) -> Image.Image:
         '''Takes a screenshot of a region of the window, and returns it as a Pillow Image object. 
         If the region would be outside of the window, a OutOfBoundsInputError is raised.
         

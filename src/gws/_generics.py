@@ -5,7 +5,6 @@ import subprocess
 from gws._errors import DependencyNotFound
 from gws.window import BasicWindow
 from typing import TYPE_CHECKING
-from PIL.Image import Image as image_type
 from PIL import Image
 from io import BytesIO
 
@@ -149,11 +148,11 @@ class GenericWindowManager(metaclass=ABCMeta):
                 time.sleep(interval)
 
     @abstractmethod
-    def screenshot(self) -> image_type:
+    def screenshot(self) -> Image.Image:
         '''Takes a screenshot of all monitors. Returns it as a PIL Image object'''
         ...
 
-    def screenshot_region(self, x: int, y: int, width: int, height: int) -> image_type:
+    def screenshot_region(self, x: int, y: int, width: int, height: int) -> Image.Image:
         '''Takes a screenshot of a specific region on your computer. 
         The image is a rectangle from (x, y) to (x + width, y + height)
 
@@ -348,7 +347,7 @@ class GenericWaylandWindowManager(GenericWindowManager):
             else:
                 raise Exception(f'Got an error when running "wtype -p {key}": {e}')
     
-    def screenshot_region(self, x: int, y: int, width: int, height: int) -> image_type:
+    def screenshot_region(self, x: int, y: int, width: int, height: int) -> Image.Image:
         try:
             grim_output = subprocess.run(['grim', '-g', f'{x},{y} {width}x{height}', '-'], stdout=subprocess.PIPE, check=True).stdout
         except FileNotFoundError as e:
@@ -360,7 +359,7 @@ class GenericWaylandWindowManager(GenericWindowManager):
         return Image.open(BytesIO(grim_output)).convert('RGBA')
 
     
-    def screenshot(self) -> image_type:
+    def screenshot(self) -> Image.Image:
         try:
             grim_output = subprocess.run(['grim', '-'], stdout=subprocess.PIPE, check=True).stdout
         except FileNotFoundError as e:
@@ -396,10 +395,10 @@ class GenericNonWaylandWindowManager(GenericWindowManager):
         import pyautogui
         pyautogui.moveTo(x, y)
 
-    def screenshot(self) -> image_type:
+    def screenshot(self) -> Image.Image:
         import pyautogui
         return pyautogui.screenshot()
     
-    def screenshot_region(self, x: int, y: int, width: int, height: int) -> image_type:
+    def screenshot_region(self, x: int, y: int, width: int, height: int) -> Image.Image:
         import pyautogui
         return pyautogui.screenshot(region=(x, y, width, height))

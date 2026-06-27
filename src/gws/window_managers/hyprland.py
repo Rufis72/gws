@@ -1,8 +1,6 @@
-from PIL.Image import Image as image_type
-from PIL import Image
 from gws._generics import GenericWaylandWindowManager
 from gws.window import BasicWindow
-from gws._errors import InvalidWindowID, DependencyNotFound
+from gws._errors import InvalidWindowID
 from typing import Any, TYPE_CHECKING
 import subprocess
 import json
