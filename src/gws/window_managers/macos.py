@@ -3,22 +3,26 @@ from gws.window import BasicWindow
 from gws._errors import InvalidWindowID
 from typing import Any, TYPE_CHECKING
 import re
+import sys
 
 # NOTE: This file is almost entirely AI generated
 # I say almost, becasue I think I hand typed some of the imports above
 
-from ApplicationServices import NSWorkspace
-from Quartz import (
-    CGWindowListCopyWindowInfo,
-    kCGWindowListExcludeDesktopElements,
-    kCGNullWindowID,
-    kCGWindowNumber,
-    kCGWindowName,
-    kCGWindowOwnerName,
-    kCGWindowOwnerPID,
-    kCGWindowBounds,
-    kCGWindowLayer,
-)
+# only imported if on macos
+# because otherwise we get sooo many errors
+if sys.platform == 'darwin':
+    from ApplicationServices import NSWorkspace
+    from Quartz import (
+        CGWindowListCopyWindowInfo,
+        kCGWindowListExcludeDesktopElements,
+        kCGNullWindowID,
+        kCGWindowNumber,
+        kCGWindowName,
+        kCGWindowOwnerName,
+        kCGWindowOwnerPID,
+        kCGWindowBounds,
+        kCGWindowLayer,
+    )
 
 if TYPE_CHECKING:
     from gws._typing import WindowLikeType, WindowLike
