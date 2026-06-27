@@ -87,7 +87,7 @@ class WindowManagerLike(Protocol):
         confidence: float = 0.999,
     ) -> Box | None: ...
 
-    def locateAll(
+    def locate_all(
         self,
         needleImage: str | Image.Image | Any,
         haystackImage: str | Image.Image | Any,
@@ -98,7 +98,7 @@ class WindowManagerLike(Protocol):
         confidence: float = 0.999,
     ) -> Generator[Box, None, None]: ...
 
-    def locateOnScreen(
+    def locate_on_screen(
         self,
         image: str | Image.Image | Any,
         minSearchTime: float = 0,
@@ -110,7 +110,7 @@ class WindowManagerLike(Protocol):
         confidence: float = 0.999,
     ) -> Box | None: ...
 
-    def locateAllOnScreen(
+    def locate_all_on_screen(
         self,
         image: str | Image.Image | Any,
         *,
@@ -121,7 +121,7 @@ class WindowManagerLike(Protocol):
         confidence: float = 0.999,
     ) -> Generator[Box, None, None]: ...
 
-    def locateCenterOnScreen(
+    def locate_center_on_screen(
         self,
         image: str | Image.Image | Any,
         *,
@@ -132,9 +132,6 @@ class WindowManagerLike(Protocol):
         step: int = 1,
         confidence: float = 0.999,
     ) -> Point | None: ...
-
-import pyautogui
-pyautogui.locateOnScreen
 
 WindowLikeType: TypeAlias = Type[WindowLike]
 '''WindowLike but for un-instantiated references and such'''
