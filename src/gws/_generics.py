@@ -252,7 +252,7 @@ class GenericWindowManager(metaclass=ABCMeta):
         *,
         minSearchTime: float = 0,
         grayscale: bool | None = None,
-        limit=None,
+        limit: int = 1,
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
