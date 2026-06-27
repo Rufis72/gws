@@ -1,6 +1,7 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator, Any
 from gws._errors import OutOfBoundsInputError
 from PIL import Image
+from pyscreeze import Box, Point
 
 if TYPE_CHECKING:
     from gws._typing import WindowManagerLike
@@ -112,3 +113,63 @@ class BasicWindow:
 
         # taking a screenshot and returning it
         return self.window_manager.screenshot_region(window_position[0] + x, window_position[1] + x, window_position[0] + width, window_position[1] + height)
+    
+    def locate_on_window(
+        self,
+        image: str | Image.Image | Any,
+        minSearchTime: float = 0,
+        *,
+        grayscale: bool | None = None,
+        limit: int = 1,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Box | None:
+        '''The logic here is incredibly similar to it's underlying
+        library pyscreeze, so check there for docs. Pyautogui also
+        uses pyscreeze under the hood, and pretty much just wraps it
+        so you can check their docs over there too.
+        
+        This function locates and returns the first match of
+        the given image it finds in a screenshot of the window.
+        How well it has to match can be changed by changing 
+        confidence (0 is anything matches 1 is exact pixel 
+        to pixel match)'''
+        # capturing the window
+        window_screenshot = self.screenshot()
+
+        # finding a match for the image
+        return self.window_manager.locate(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+
+    def locate_all_on_window(
+        self,
+        image: str | Image.Image | Any,
+        *,
+        grayscale: bool | None = None,
+        limit: int = 10000,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Generator[Box, None, None]:
+        # capturing the window
+        window_screenshot = self.screenshot()
+
+        # finding a match for the image
+        return self.window_manager.locate_all(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+
+    def locate_center_on_window(
+        self,
+        image: str | Image.Image | Any,
+        *,
+        minSearchTime: float = 0,
+        grayscale: bool | None = None,
+        limit=None,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Point | None:
+        # capturing the window
+        window_screenshot = self.screenshot()
+
+        # finding a match for the image
+        return self.window_manager.locate_center(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
