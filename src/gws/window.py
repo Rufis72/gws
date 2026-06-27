@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Generator, Any
 from gws._errors import OutOfBoundsInputError
 from PIL import Image
 from pyscreeze import Box, Point
-from math import floor, ceil
+from math import ceil
 
 if TYPE_CHECKING:
     from gws._typing import WindowManagerLike
@@ -12,8 +12,8 @@ class BasicWindow:
 
     # not sure where to put this, so I'm putting it here
     # NOTE: When a method takes input that could be scaled, it's scaling logic
-    # should be ceil(input / scale), otherwise if it outputs scaled data, it
-    # should be floor(input * scale)
+    # should be input / scale, otherwise if it outputs scaled data, it
+    # should be input * scale
 
     def __init__(self, window_manager: WindowManagerLike, id: str):
         '''
@@ -127,14 +127,14 @@ class BasicWindow:
         '''Scales a point using the macro resolution. If there is no
         macro resolution, it just returns the point, otherwise
         it multiplies the point's x by the scale gotten from the macro resolution.
-        If the point is a float, it's floored.
+        If the point is a float, it's ceiled.
         
         That means if your point is (1000, 0) and your window is a 500x500 window,
         but the macro was intended for a 1000x1000 window, it'll figure out the scale
         is (0.5, 0.5), then multiply your point by it'''
         return (
-            floor(point[0] * scale[0]),
-            floor(point[1] * scale[1])
+            ceil(point[0] * scale[0]),
+            ceil(point[1] * scale[1])
         )
 
     def key_down(self, key: str):
@@ -212,10 +212,10 @@ class BasicWindow:
             # NOTE: The reason we're turning scale from an (int, int) into 
             # two different variables and back again is because I named
             # the scale parameter, and I'm too lazy to change it
-            x = floor(x * scale_x)
-            y = floor(y * scale_y)
-            width = floor(width * scale_x)
-            height = floor(height * scale_y)
+            x = ceil(x * scale_x)
+            y = ceil(y * scale_y)
+            width = ceil(width * scale_x)
+            height = ceil(height * scale_y)
 
         # making sure that the screenshot region isn't outside of the size of the window
         if x + width > window_size[0] or y + height > window_size[1]:
@@ -359,6 +359,6 @@ class BasicWindow:
             # coords for the macro resolution to the actual resolution
             # so division is doing the opposite
             # which is what we're doin ghere
-            return Point(floor(match.x / scale_x), floor(match.y / scale_y))
+            return Point(ceil(match.x / scale_x), ceil(match.y / scale_y))
         else:
             return match
