@@ -2,6 +2,9 @@ from typing import Protocol
 from typing_extensions import TypeAlias, Type
 from gws.window import BasicWindow
 from PIL import Image
+from typing import Any
+from pyscreeze import Box, Point
+from typing import Generator
 
 class WindowLike(Protocol):
     def __init__(self, window_manager: WindowManagerLike, id: str) -> None: ...
@@ -15,6 +18,40 @@ class WindowLike(Protocol):
     def typewrite(self, text: str, hold_duration: float = 0.09, spacing_duration: float = 0): ...
     def screenshot(self) -> Image.Image: ...
     def screenshot_region(self, x: int, y: int, width: int, height: int) -> Image.Image: ...
+    def locateOnWindow(
+        self,
+        image: str | Image.Image | Any,
+        minSearchTime: float = 0,
+        *,
+        grayscale: bool | None = None,
+        limit: int = 1,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Box | None: ...
+
+    def locateAllOnWindow(
+        self,
+        image: str | Image.Image | Any,
+        *,
+        grayscale: bool | None = None,
+        limit: int = 10000,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Generator[Box, None, None]: ...
+
+    def locateCenterOnWindow(
+        self,
+        image: str | Image.Image | Any,
+        *,
+        minSearchTime: float = 0,
+        grayscale: bool | None = None,
+        limit=None,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Point | None: ...
 
 class GetWindowFn(Protocol):
     def __call__(self, name: str) -> WindowLike: ...
@@ -34,6 +71,70 @@ class WindowManagerLike(Protocol):
     def typewrite(self, text: str, hold_duration: float = 0.09, spacing_duration: float = 0): ...
     def screenshot(self) -> Image.Image: ...
     def screenshot_region(self, x: int, y: int, w: int, h: int) -> Image.Image: ...
+    # apparently the types should be automatically assigned for the ones that are
+    # basically just wrappers for pyscreeze
+    # so locate, locateAll, locateOnScreen, etc
+    # pretty much all the ones with locate below this
+    def locate(
+        self,
+        needleImage: str | Image.Image | Any,
+        haystackImage: str | Image.Image | Any,
+        *,
+        grayscale: bool | None = None,
+        limit: int = 1,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Box | None: ...
+
+    def locateAll(
+        self,
+        needleImage: str | Image.Image | Any,
+        haystackImage: str | Image.Image | Any,
+        grayscale: bool | None = None,
+        limit: int = 10000,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Generator[Box, None, None]: ...
+
+    def locateOnScreen(
+        self,
+        image: str | Image.Image | Any,
+        minSearchTime: float = 0,
+        *,
+        grayscale: bool | None = None,
+        limit: int = 1,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Box | None: ...
+
+    def locateAllOnScreen(
+        self,
+        image: str | Image.Image | Any,
+        *,
+        grayscale: bool | None = None,
+        limit: int = 10000,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Generator[Box, None, None]: ...
+
+    def locateCenterOnScreen(
+        self,
+        image: str | Image.Image | Any,
+        *,
+        minSearchTime: float = 0,
+        grayscale: bool | None = None,
+        limit=None,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Point | None: ...
+
+import pyautogui
+pyautogui.locateOnScreen
 
 WindowLikeType: TypeAlias = Type[WindowLike]
 '''WindowLike but for un-instantiated references and such'''
