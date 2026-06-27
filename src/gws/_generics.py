@@ -245,6 +245,33 @@ class GenericWindowManager(metaclass=ABCMeta):
 
         # returning what was found
         return self.locate_all(image, desktop_screenshot, grayscale, limit, region, step, confidence)
+    
+    def locate_center(
+        self,
+        needleImage: str | Image.Image | Any,
+        haystackImage: str | Image.Image | Any,
+        *,
+        minSearchTime: float = 0,
+        grayscale: bool | None = None,
+        limit=None,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> pyscreeze.Point | None:
+        '''This is not a wrapper for a pyscreeze function, as it doesn't have a locateCenter function.
+        
+        This function is the exact same as the location method, except instead of returning the coords
+        for the match, and how big it was (really just the size of the needleImage), it just returns
+        the center of where it found it'''
+        # locating the image on the screen
+        match_coords = self.locate(needleImage, haystackImage, grayscale=grayscale, region=region, step=step, confidence=confidence)
+
+        # if we couldn't find a match we return none
+        if match_coords is None:
+            return None
+        # otherwise returning the center of the match
+        else:
+            return pyscreeze.center(match_coords)
 
     def locate_center_on_screen(
         self,

@@ -121,6 +121,19 @@ class WindowManagerLike(Protocol):
         confidence: float = 0.999,
     ) -> Generator[Box, None, None]: ...
 
+    def locate_center(
+        self,
+        needleImage: str | Image.Image | Any,
+        haystackImage: str | Image.Image | Any,
+        *,
+        minSearchTime: float = 0,
+        grayscale: bool | None = None,
+        limit=None,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Point | None: ...
+
     def locate_center_on_screen(
         self,
         image: str | Image.Image | Any,
