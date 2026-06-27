@@ -7,7 +7,6 @@ from typing import Any, TYPE_CHECKING
 import subprocess
 import json
 import re
-from io import BytesIO
 
 if TYPE_CHECKING:
     from gws._typing import WindowLikeType, WindowLike
@@ -124,26 +123,3 @@ class Hyprland(GenericWaylandWindowManager):
         
         # returning the position
         return window_name
-    
-    def screenshot_region(self, x: int, y: int, width: int, height: int) -> image_type:
-        try:
-            grim_output = subprocess.run(['grim', '-g', f'{x},{y} {width}x{height}', '-'], stdout=subprocess.PIPE, check=True).stdout
-        except FileNotFoundError as e:
-            raise DependencyNotFound(f'Could not find grim, which is required for taking screenshots. Is it on PATH/installed?')
-        except subprocess.CalledProcessError as e:
-            raise Exception(f'Got this error when running \'grim -g "{x},{y} {width}x{height}" - \': {e}')
-        
-        # turning the png (or other file format) output into an image object
-        return Image.open(BytesIO(grim_output)).convert('RGBA')
-
-    
-    def screenshot(self) -> image_type:
-        try:
-            grim_output = subprocess.run(['grim', '-'], stdout=subprocess.PIPE, check=True).stdout
-        except FileNotFoundError as e:
-            raise DependencyNotFound(f'Could not find grim, which is required for taking screenshots. Is it on PATH/installed?')
-        except subprocess.CalledProcessError as e:
-            raise Exception(f'Got this error when running \'grim -\': {e}')
-        
-        # turning the png (or other file format) output into an image object
-        return Image.open(BytesIO(grim_output)).convert('RGBA')
