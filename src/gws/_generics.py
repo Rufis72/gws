@@ -4,9 +4,10 @@ import time
 import subprocess
 from gws._errors import DependencyNotFound
 from gws.window import BasicWindow
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Generator
 from PIL import Image
 from io import BytesIO
+import pyscreeze
 
 if TYPE_CHECKING:
     from gws._typing import WindowLikeType, WindowLike
@@ -167,6 +168,111 @@ class GenericWindowManager(metaclass=ABCMeta):
         :param int width the width of the rectangle
         :param int height the height of the rectangle:'''
         ...
+
+    def locate(
+        self,
+        needleImage: str | Image.Image | Any,
+        haystackImage: str | Image.Image | Any,
+        *,
+        grayscale: bool | None = None,
+        limit: int = 1,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> pyscreeze.Box | None:
+        '''This is a wrapper for pyscreeze.locateAll, so refer to there for documentation.
+        Pyautogui also pretty much wraps pyscreeze, so they may have useful docs over there too.'''
+        return pyscreeze.locate(needleImage, haystackImage, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+
+    def locate_all(
+        self,
+        needleImage: str | Image.Image | Any,
+        haystackImage: str | Image.Image | Any,
+        grayscale: bool | None = None,
+        limit: int = 10000,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Generator[pyscreeze.Box, None, None]:
+        '''This is a wrapper for pyscreeze.locateAll, so refer to there for documentation.
+        Pyautogui also pretty much wraps pyscreeze, so they may have useful docs over there too.'''
+        return pyscreeze.locateAll(needleImage, haystackImage, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+
+    def locate_on_screen(
+        self,
+        image: str | Image.Image | Any,
+        minSearchTime: float = 0,
+        *,
+        grayscale: bool | None = None,
+        limit: int = 1,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> pyscreeze.Box | None:
+        '''This is almost a wrapper for pyscreeze.locateAll, so refer to there for documentation.
+        Pyautogui also pretty much wraps pyscreeze, so they may have useful docs over there too.
+        The reason this is almost a wrapper, is because we use our own screenshot utility for wayland,
+        but on non-wayland systems, we uses pyautogui's screenshot utility (pyscreeze).
+        
+        This function takes a screenshot of the screen, then finds and returns the first match it finds
+        for a given image.'''
+        # getting the screen
+        desktop_screenshot = self.screenshot()
+
+        # finding and returning any match we find
+        return pyscreeze.locate(image, desktop_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+
+    def locate_all_on_screen(
+        self,
+        image: str | Image.Image | Any,
+        *,
+        grayscale: bool | None = None,
+        limit: int = 10000,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> Generator[pyscreeze.Box, None, None]:
+        '''This is almost a wrapper for pyscreeze.locateAll, so refer to there for documentation.
+        Pyautogui also pretty much wraps pyscreeze, so they may have useful docs over there too.
+        The reason this is almost a wrapper, is because we use our own screenshot utility for wayland,
+        but on non-wayland systems, we uses pyautogui's screenshot utility (pyscreeze).
+        
+        This function finds all of some image on the screen, and returns a list of the positions.
+        How exact the match has to be is determined by confidence, which should be between 0 (anything
+        matches) and 1 (only an exact pixel match matches).'''
+        # getting the screen
+        desktop_screenshot = self.screenshot()
+
+        # returning what was found
+        return self.locate_all(image, desktop_screenshot, grayscale, limit, region, step, confidence)
+
+    def locate_center_on_screen(
+        self,
+        image: str | Image.Image | Any,
+        *,
+        minSearchTime: float = 0,
+        grayscale: bool | None = None,
+        limit=None,
+        region: tuple[int, int, int, int] | None = None,
+        step: int = 1,
+        confidence: float = 0.999,
+    ) -> pyscreeze.Point | None:
+        '''This is almost a wrapper for pyscreeze.locateCenterOnScreen, so refer to there for documentation.
+        Pyautogui also pretty much wraps pyscreeze, so they may have useful docs over there too.
+        The reason this is almost a wrapper, is because we use our own screenshot utility for wayland,
+        but on non-wayland systems, we uses pyautogui's screenshot utility (pyscreeze).
+        
+        This function is the same as locate_on_screen, but instead of returning the top left corner,
+        it returns the center.'''
+        # locating the image on the screen
+        match_coords = self.locate_on_screen(image, minSearchTime, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+
+        # if we couldn't find a match we return none
+        if match_coords is None:
+            return None
+        # otherwise returning the center of the match
+        else:
+            return pyscreeze.center(match_coords)
         
 
 
