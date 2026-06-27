@@ -18,7 +18,7 @@ class WindowLike(Protocol):
     def typewrite(self, text: str, hold_duration: float = 0.09, spacing_duration: float = 0): ...
     def screenshot(self) -> Image.Image: ...
     def screenshot_region(self, x: int, y: int, width: int, height: int) -> Image.Image: ...
-    def locateOnWindow(
+    def locate_on_window(
         self,
         image: str | Image.Image | Any,
         minSearchTime: float = 0,
@@ -30,7 +30,7 @@ class WindowLike(Protocol):
         confidence: float = 0.999,
     ) -> Box | None: ...
 
-    def locateAllOnWindow(
+    def locate_all_on_window(
         self,
         image: str | Image.Image | Any,
         *,
@@ -41,7 +41,7 @@ class WindowLike(Protocol):
         confidence: float = 0.999,
     ) -> Generator[Box, None, None]: ...
 
-    def locateCenterOnWindow(
+    def locate_center_on_window(
         self,
         image: str | Image.Image | Any,
         *,
