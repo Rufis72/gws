@@ -3,6 +3,7 @@ from gws._errors import OutOfBoundsInputError
 from PIL import Image
 from pyscreeze import Box, Point
 from math import ceil
+from PIL.Image import Resampling
 
 if TYPE_CHECKING:
     from gws._typing import WindowManagerLike
@@ -99,7 +100,7 @@ class BasicWindow:
         if self.macro_resolution is None:
             return (1, 1)
         else:
-            return (window_size[0] / self.macro_resolution[0], window_size[0] / self.macro_resolution[1])
+            return (window_size[0] / self.macro_resolution[0], window_size[1] / self.macro_resolution[1])
 
     def get_scale(self) -> tuple[float, float]:
         '''Returns the scale to multiply by so that points
@@ -235,6 +236,7 @@ class BasicWindow:
         step: int = 1,
         confidence: float = 0.999,
         scale: bool = True,
+        scale_image: bool = True,
     ) -> Box | None:
         '''The logic here is incredibly similar to it's underlying
         library pyscreeze, so check there for docs. Pyautogui also
@@ -247,9 +249,23 @@ class BasicWindow:
         confidence (0 is anything matches 1 is exact pixel 
         to pixel match)
         
-        :param bool scale: If the given output should be scaled according to the macro resolution (if set)'''
+        :param bool scale: If the given output should be scaled according to the macro resolution (if set)
+        :param bool scale_image: If the given image should be scaled along with everything else'''
         # capturing the window
         window_screenshot = self.screenshot()
+
+        # if we were given the path to an image, opening it
+        if type(image) == str:
+            image: Image.Image = Image.open(image)
+
+        # if we're supposed to scale the image we're looking for, scaling the image
+        if scale_image:
+            # getting the scale
+            scale_x, scale_y = self.get_scale()
+            image = image.resize((
+                ceil(image.size[0] * scale_x),
+                ceil(image.size[1] * scale_y),
+            ))
 
         # finding a match for the image
         match = self.window_manager.locate(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
@@ -287,11 +303,27 @@ class BasicWindow:
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-        scale: bool = True
+        scale: bool = True,
+        scale_image: bool = True,
     ) -> Generator[Box, None, None]:
-        ''':param bool scale: If the given output should be scaled according to the macro resolution (if set)'''
+        ''':param bool scale: If the given output should be scaled according to the macro resolution (if set)
+        :param bool scale_image: If the given image should be scaled along with everything else'''
+
         # capturing the window
         window_screenshot = self.screenshot()
+
+        # if we were given the path to an image, opening it
+        if type(image) == str:
+            image: Image.Image = Image.open(image)
+
+        # if we're supposed to scale the image we're looking for, scaling the image
+        if scale_image:
+            # getting the scale
+            scale_x, scale_y = self.get_scale()
+            image = image.resize((
+                ceil(image.size[0] * scale_x),
+                ceil(image.size[1] * scale_y)
+            ))
 
         # finding all matches for the image
         matches = self.window_manager.locate_all(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
@@ -336,11 +368,26 @@ class BasicWindow:
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-        scale: bool = True
+        scale: bool = True,
+        scale_image: bool = True
     ) -> Point | None:
-        ''':param bool scale: If the given output should be scaled according to the macro resolution (if set)'''
+        ''':param bool scale: If the given output should be scaled according to the macro resolution (if set)
+        :param bool scale_image: If the given image should be scaled along with everything else'''
         # capturing the window
         window_screenshot = self.screenshot()
+
+        # if we were given the path to an image, opening it
+        if type(image) == str:
+            image: Image.Image = Image.open(image)
+
+        # if we're supposed to scale the image we're looking for, scaling the image
+        if scale_image:
+            # getting the scale
+            scale_x, scale_y = self.get_scale()
+            image = image.resize((
+                ceil(image.size[0] * scale_x),
+                ceil(image.size[1] * scale_y)
+            ))
 
         # finding a match for the image
         match = self.window_manager.locate_center(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
