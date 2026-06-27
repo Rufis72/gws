@@ -92,7 +92,8 @@ class BasicWindow:
         return self.window_manager.screenshot_region(*window_position, window_position[0] + window_size[0], window_position[1] + window_size[1])
     
     def screenshot_region(self, x: int, y: int, width: int, height: int) -> image_type:
-        '''Takes a screenshot of a region of the window. If the region would be outside of the window, a OutOfBoundsInputError is raised.
+        '''Takes a screenshot of a region of the window, and returns it as a Pillow Image object. 
+        If the region would be outside of the window, a OutOfBoundsInputError is raised.
         
         If you want to take a screenshot that spans more than window, use your window manager's screenshot 
         or screenshot_region methods instead.
