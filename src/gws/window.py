@@ -37,9 +37,9 @@ class BasicWindow:
         window_position = self.window_manager.get_position_of_window(self.id)
 
         # then we calculate where to click
-        click_pos: tuple[int, int] = (x + window_position[0], y + window_position[1])
+        click_pos = (0, 0)
 
-        # scaling it if we're supposed to
+        # first we scale it if we're supposed to
         if scale:
             # getting the scale
             # we get window_size seperately because we might use it later
@@ -50,7 +50,10 @@ class BasicWindow:
             # we divide here because multiplication is for
             # real_position -> scaled_internal_handling_position, and we wanna go
             # scaled_internal_handling_positiion -> real_position
-            click_pos = (ceil(click_pos[0] * scale_x), ceil(click_pos[1] * scale_y))
+            click_pos = self.scale_point((x, y), (scale_x, scale_y))
+
+        # then we add the window's offset (it's position)
+        click_pos = (click_pos[0] + window_position[0], click_pos[1] + window_position[1])
 
         # making sure the click isn't out of bounds (if enabled)
         if not bypass_out_of_bounds_check:
