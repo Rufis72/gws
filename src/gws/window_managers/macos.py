@@ -71,6 +71,10 @@ class MacOS(GenericNonWaylandWindowManager):
             for window_data in all_window_data
             if self._is_application_window(window_data, regular_application_pids)
         ]
+    
+    def list_windows(self) -> list[str]:
+        # TODO: Test this (please)
+        return [self._get_window_title(window_data) for window_data in self._get_all_window_data()]
 
     def _get_window_title(self, window_data: dict[str, Any]) -> str:
         title = window_data.get(kCGWindowName)
