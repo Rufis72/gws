@@ -206,8 +206,10 @@ class BasicWindow:
 
         # scaling stuff if we're supposed to
         if scale:
+            print(x, y, width, height)
             # getting the scale
             scale_x, scale_y = self.calculate_scale(window_size)
+            print(scale_x, scale_y)
 
             # adjusting the x, y, width, and height based of the scale
             # NOTE: The reason we're turning scale from an (int, int) into 
@@ -220,7 +222,7 @@ class BasicWindow:
 
         # making sure that the screenshot region isn't outside of the size of the window
         if x + width > window_size[0] or y + height > window_size[1]:
-            raise OutOfBoundsInputError(f'The final end position of the region ({x + width}, {y + height})to take the screenshot of is outside the size of the window. {window_position} If you want to take a screenshot of more than one window, use your window manager\'s screenshot or screenshot_region methods.')
+            raise OutOfBoundsInputError(f'The final end position of the region ({x + width}, {y + height}) to take the screenshot of is outside the size of the window. {window_size} If you want to take a screenshot of more than one window, use your window manager\'s screenshot or screenshot_region methods.')
 
         # taking a screenshot and returning it
         return self.window_manager.screenshot_region(window_position[0] + x, window_position[1] + y, width, height)
@@ -259,39 +261,29 @@ class BasicWindow:
             image: Image.Image = Image.open(image)
 
         # if we're supposed to scale the image we're looking for, scaling the image
-        if scale_image:
-            # getting the scale
-            scale_x, scale_y = self.get_scale()
-            image = image.resize((
-                ceil(image.size[0] * scale_x),
-                ceil(image.size[1] * scale_y),
-            ))
-
-        # finding a match for the image
-        match = self.window_manager.locate(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
-
-        # if we couldn't find a match, returning None
-        if match is None:
-            return None
-
-        # if we're supposed to scale it, scaling it
+        # we scale both the screenshot, and the image we're looking for
         if scale:
             # getting the scale
             scale_x, scale_y = self.get_scale()
 
-            # calculating and returning the scaled box
-            # we divide by the scale here, because multiplication is for turning
-            # coords for the macro resolution to the actual resolution
-            # so division is doing the opposite
-            # which is what we're doin ghere
-            return Box(
-                ceil(match.left / scale_x),
-                ceil(match.top / scale_y),
-                ceil(match.width / scale_x),
-                ceil(match.height / scale_y)
-            )
-        
-        # otherwise we just return the box we just got
+            # if the scale isn't (1, 1) (meaning we have to actually
+            # scale stuff ):
+            if (scale_x, scale_y) != (1, 1):
+                # scaling the image IF we're supposed to
+                if scale_image:
+                    # scaling the image we're looking for (the haystack image)
+                    image = image.resize((
+                        ceil(image.size[0] * scale_x),
+                        ceil(image.size[1] * scale_y)
+                    ))
+
+                # scaling the image we're searching in (the needle image)
+                window_screenshot = window_screenshot.resize(self.macro_resolution)
+
+        # finding a match for the image
+        match = self.window_manager.locate(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+
+        # returning the match
         return match
 
     def locate_all_on_window(
@@ -317,46 +309,31 @@ class BasicWindow:
             image: Image.Image = Image.open(image)
 
         # if we're supposed to scale the image we're looking for, scaling the image
-        if scale_image:
-            # getting the scale
-            scale_x, scale_y = self.get_scale()
-            image = image.resize((
-                ceil(image.size[0] * scale_x),
-                ceil(image.size[1] * scale_y)
-            ))
-
-        # finding all matches for the image
-        matches = self.window_manager.locate_all(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
-
-        # if we're supposed to scale it, scaling it
+        # we scale both the screenshot, and the image we're looking for
         if scale:
             # getting the scale
             scale_x, scale_y = self.get_scale()
 
-            # going through each match and scaling it
-            scaled_matches: list[Box] = []
+            # if the scale isn't (1, 1) (meaning we have to actually
+            # scale stuff ):
+            if (scale_x, scale_y) != (1, 1):
+                # scaling the image IF we're supposed to
+                if scale_image:
+                    # scaling the image we're looking for (the haystack image)
+                    image = image.resize((
+                        ceil(image.size[0] * scale_x),
+                        ceil(image.size[1] * scale_y)
+                    ))
 
-            for match in matches:
+                # scaling the image we're searching in (the needle image)
+                window_screenshot = window_screenshot.resize(self.macro_resolution)
+            window_screenshot = window_screenshot.resize(self.macro_resolution)
 
-                # calculating and returning the scaled box
-                # we divide by the scale here, because multiplication is for turning
-                # coords for the macro resolution to the actual resolution
-                # so division is doing the opposite
-                # which is what we're doin ghere
-                scaled_matches.append(Box(
-                    ceil(match.left / scale_x),
-                    ceil(match.top / scale_y),
-                    ceil(match.width / scale_x),
-                    ceil(match.height / scale_y)
-                ))
+        # finding all matches for the image
+        matches = self.window_manager.locate_all(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
 
-            return (y for y in scaled_matches)
-        # otherwise we just return the matches
-        else:
-            # why is there the for y in matches bit?
-            # it's because the original API for pyscreeze does it, and
-            # we're trying to have pretty close parity
-            return matches
+        # returning the matches
+        return matches
 
     def locate_center_on_window(
         self,
@@ -381,31 +358,27 @@ class BasicWindow:
             image: Image.Image = Image.open(image)
 
         # if we're supposed to scale the image we're looking for, scaling the image
-        if scale_image:
-            # getting the scale
-            scale_x, scale_y = self.get_scale()
-            image = image.resize((
-                ceil(image.size[0] * scale_x),
-                ceil(image.size[1] * scale_y)
-            ))
-
-        # finding a match for the image
-        match = self.window_manager.locate_center(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
-
-        # if we couldn't find a match, returning None
-        if match is None:
-            return None
-
-        # if we should scale the output, doing that
+        # we scale both the screenshot, and the image we're looking for
         if scale:
             # getting the scale
             scale_x, scale_y = self.get_scale()
 
-            # returning the scaled point
-            # we divide by the scale here, because multiplication is for turning
-            # coords for the macro resolution to the actual resolution
-            # so division is doing the opposite
-            # which is what we're doin ghere
-            return Point(ceil(match.x / scale_x), ceil(match.y / scale_y))
-        else:
-            return match
+            # if the scale isn't (1, 1) (meaning we have to actually
+            # scale stuff ):
+            if (scale_x, scale_y) != (1, 1):
+                # scaling the image IF we're supposed to
+                if scale_image:
+                    # scaling the image we're looking for (the haystack image)
+                    image = image.resize((
+                        ceil(image.size[0] * scale_x),
+                        ceil(image.size[1] * scale_y)
+                    ))
+
+                # scaling the image we're searching in (the needle image)
+                window_screenshot = window_screenshot.resize(self.macro_resolution)
+
+        # finding a match for the image
+        match = self.window_manager.locate_center(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+
+        # returning the matches
+        return match
