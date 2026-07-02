@@ -133,7 +133,7 @@ class GenericWindowManager(metaclass=ABCMeta):
         time.sleep(duration)
         self.key_up(key)
 
-    def typewrite(self, text: str, hold_duration: float, interval: float):
+    def typewrite(self, text: str, hold_duration: float = 0.09, interval: float = 0):
         '''Types characters, holding each one for a given time, and with a given duration between each key press.
         
         :param str text: The text to typewrite
@@ -147,6 +147,10 @@ class GenericWindowManager(metaclass=ABCMeta):
             # is the last character
             if not i == len(text) + 1:
                 time.sleep(interval)
+
+    def list_windows(self) -> list[str]:
+        '''Returns the titles/names of all windows'''
+        ...
 
     @abstractmethod
     def screenshot(self) -> Image.Image:

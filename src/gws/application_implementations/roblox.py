@@ -1,4 +1,4 @@
-from gws._typing import WindowManagerLike
+from gws._typing import WindowManagerLike, WindowLike
 from gws.window import BasicWindow
 from gws._errors import FailedNetworkRequest, WindowNotFoundError
 import requests
@@ -212,10 +212,52 @@ class RobloxWindow(BasicWindow):
         else:
             url = f'{roblox_url}/navigation/home'
 
+        # getting all the window names from before opening
+        # Roblox so we can compare to after and getting
+        # the name of the roblox window we just opened
+        window_names_before = self.window_manager.list_window_names()
+
         # opening roblox
         self.roblox_thread = threading.Thread(target=webbrowser.open(url + parameters_string), daemon=True)
 
-        # finding the roblox window and setting it as our ID
+        # getting all open windows afterwards, and finding
+        # the ones that weren't open before
+        # we repeat this until we find a window, or we hit the timeout
+        # for find a roblox window
+        time_start = time.time()
+        window: None | WindowLike = None
+
+        while time.time() - time_start < roblox_opening_time_timout and window is None:
+            window_names_after = self.window_manager.list_window_names()
+
+            # comparing them
+            new_windows: list[str] = []
+            for window_name in window_names_after:
+                # we only check for if the ones after opening roblox
+                # were there before, because if a window was closed
+                # while we were opening roblox, then it'd count as unique
+                # but it no longer exists
+                if not window_names_before.__contains__(window_name):
+                    new_windows.append(window_name)
+
+            # if there's only one unique window name, and it has roblox (or Sober) in it, that's our window!
+            # NOTE: Sober is a linux port of roblox
+            if len(new_windows) == 1 and (new_windows[0].lower().__contains__('roblox') or new_windows[0].lower().__contains__('sober')):
+                window = self.window_manager.get_window_from_name(new_windows[0])
+            # otherwise, we go through each new window, and if it has 'roblox' or 'sober' in it, we take that one
+            else:
+                for new_window in new_windows:
+                    if new_window.lower().__contains__('roblox') or new_window.lower().__contains__('sober'):
+                        window = self.window_manager.get_window_from_name(new_window)
+
+        # if we could find a window, we set that window's id as our own
+        if window is not None:
+            self.id = window.id
+        # otherwise we raise an error saying we couldn't find it
+        else:
+            raise WindowNotFoundError(f'We couldn\'t find a Roblox window. Did one open?')
+
+        '''# finding the roblox window and setting it as our ID
         # we check as often as we can for roblox_opening_time_timeout seconds, if nothing opens
         # after that amount of time, we give up
         time_we_started_looking = time.time()
@@ -238,4 +280,4 @@ class RobloxWindow(BasicWindow):
             raise WindowNotFoundError('We couldn\'t find a roblox window. Did one open?')
         # otherwise we set that window's ID as our own
         else:
-            self.id = window.id
+            self.id = window.id'''

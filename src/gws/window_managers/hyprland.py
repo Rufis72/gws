@@ -46,6 +46,13 @@ class Hyprland(GenericWaylandWindowManager):
         # returning the window data
         return this_window_data
     
+    def list_window_names(self) -> list[str]:
+        # getting all the window info
+        all_window_info = self._get_all_window_data()
+
+        # getting the titles for all of them and returning them
+        return [window.get('title') for window in all_window_info]
+    
     def get_window_from_name(self, name: str, ignore_capitalization: bool = False, window_type: WindowLikeType = BasicWindow) -> WindowLike | None:
         '''Checks the name of every window, if the given name exactly
         matches the window name, a HyprlandWindow object is return of it.
