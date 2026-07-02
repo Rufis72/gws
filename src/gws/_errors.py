@@ -12,3 +12,6 @@ class DependencyNotFound(Exception):
 
 class FailedNetworkRequest(Exception):
     pass
+
+class WindowNotFoundError(Exception):
+    pass

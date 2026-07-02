@@ -1,13 +1,13 @@
 from gws._typing import WindowManagerLike
 from gws.window import BasicWindow
-from gws._errors import FailedNetworkRequest
+from gws._errors import FailedNetworkRequest, WindowNotFoundError
 import requests
 import webbrowser
 import threading
-import asyncio
+import time
 
 class RobloxWindow(BasicWindow):
-    def __init__(self, window_manager: WindowManagerLike, id: str):
+    def __init__(self, window_manager: WindowManagerLike, id: str | None = None):
         self.roblox_thread = None
         super().__init__(window_manager, id)
     
@@ -75,18 +75,6 @@ class RobloxWindow(BasicWindow):
         
         # returning the response(s)
         return servers
-    
-    def _run_roblox_in_seperate_thread(self, roblox_command: str):
-        '''Runs roblox_command with webbrowser.run, and opens it in a seperate thread
-
-        This is pretty much used to make it non-blocking, but it will not terminate with the rest of the program, 
-        so the user has to close it themselves
-        
-        :param str roblox_command: This should be a command that'd open roblox (like 'roblox://?gameId=1818' for example)'''
-        self.roblox_thread = threading.Thread(target=webbrowser.open, args={roblox_command})
-
-        # starting the thread
-        self.roblox_thread.start()
 
     def open(
             self,
@@ -112,7 +100,8 @@ class RobloxWindow(BasicWindow):
             search_type: str | None = None,
 
             roblox_url: str = 'roblox://',
-            command_ovveride: str | None = None
+            command_ovveride: str | None = None,
+            roblox_opening_time_timout: int = 45,
             ):
         '''Opens Roblox using it's URL (URI?) scheme roblox://
 
@@ -149,6 +138,7 @@ class RobloxWindow(BasicWindow):
         :param str game_instance_id: The game instance to join, you can get server info by using Roblox's api (https://games.roblox.com/v1/games/[game or place id]/servers/[you need to have text here, but it doesn't matter what]), or using our wrapper for it we implemented here
         :param str roblox_url: The link to open roblox
         :param str | None command_override: If the command we would run should be overwritten, and just run command_override instead
+        :param int roblox_opening_time_timeout: How long to try to find the roblox window until we just give up and say we couldn't find the roblox window.
         '''
         # NOTE: All the parameters were grabbed from the following:
         # https://github.com/bloxstraplabs/bloxstrap/wiki/A-deep-dive-on-how-the-Roblox-bootstrapper-works#starting-roblox and
@@ -213,4 +203,29 @@ class RobloxWindow(BasicWindow):
             url = f'{roblox_url}/navigation/home'
 
         # opening roblox
-        self._run_roblox_in_seperate_thread(url + parameters_string)
+        self.roblox_thread = threading.Thread(target=webbrowser.open(url + parameters_string), daemon=True)
+
+        # finding the roblox window and setting it as our ID
+        # we check as often as we can for roblox_opening_time_timeout seconds, if nothing opens
+        # after that amount of time, we give up
+        time_we_started_looking = time.time()
+        window = None
+
+        while time_we_started_looking - time.time() < roblox_opening_time_timout and window is None:
+            # if there's one called roblox, we take that one
+            window = self.window_manager.get_window_from_name('Roblox')
+            
+            # otherwise, we check if there's one named Sober (A linux roblox client)
+            if window is None:
+                window = self.window_manager.get_window_from_name('Sober')
+            
+            # otherwise, if neither of those worked, we just look for one that had roblox in it's name
+            if window is None:
+                window = self.window_manager.get_window_from_regex('.*Roblox.*')
+
+        # lastly, if we couldn't find anything after all that time, we raise an error
+        if window is None:
+            raise WindowNotFoundError('We couldn\'t find a roblox window. Did one open?')
+        # otherwise we set that window's ID as our own
+        else:
+            self.id = window.id
