@@ -40,7 +40,11 @@ class BasicWindow:
         # then we calculate where to click
         click_pos = (0, 0)
 
-        # first we scale it if we're supposed to
+        # first, we set click_pos to it's x and y relative
+        # to the window
+        # if we're supposed to scale that, we do
+        # otherwise, we don't
+        # scaling it
         if scale:
             # getting the scale
             # we get window_size seperately because we might use it later
@@ -53,6 +57,10 @@ class BasicWindow:
             # scaled_internal_handling_positiion -> real_position
             click_pos = self.scale_point((x, y), (scale_x, scale_y))
 
+        # not scaling it
+        else:
+            click_pos = (x, y)
+
         # then we add the window's offset (it's position)
         click_pos = (click_pos[0] + window_position[0], click_pos[1] + window_position[1])
 
@@ -61,10 +69,12 @@ class BasicWindow:
             # if we didn't get the window_size earlier from scaling
             if not scale:
                 window_size = self.get_size()
-            if click_pos[0] > window_size[0]:
+            if click_pos[0] > window_size[0] + window_position[0]:
                 raise OutOfBoundsInputError(f'Click at ({click_pos[0]}, {click_pos[1]}) has a bigger x than the window\'s size ({window_size[0]}, {window_size[1]})')
-            elif click_pos[1] > window_size[1]:
+            elif click_pos[1] > window_size[1] + window_position[1]:
                 raise OutOfBoundsInputError(f'Click at ({click_pos[0]}, {click_pos[1]}) has a bigger y than the window\'s size ({window_size[0]}, {window_size[1]})')
+
+        print(f'clicking: {click_pos}, {x}, {y}')
 
         # clicking
         self.window_manager.click(*click_pos, duration, button)
