@@ -1,18 +1,27 @@
+from gws._typing import WindowManagerLike
 from gws.window import BasicWindow
 from gws._errors import FailedNetworkRequest
 import requests
 import webbrowser
+import threading
+import asyncio
 
 class RobloxWindow(BasicWindow):
-    def list_servers(self, place_id: int, limit: int = 25, pages: int = 1) -> list[dict]:
+    def __init__(self, window_manager: WindowManagerLike, id: str):
+        self.roblox_thread = None
+        super().__init__(window_manager, id)
+    
+    def list_servers(self, place_id: int, sort = 'Desc', exclude_full_servers: bool = False, limit: int = 25, pages: int = 1) -> list[dict]:
         '''Calls the roblox API to list availible servers for a game. This returns limit servers per page, and can request as many pages as there are availbile on the API. Stops automatically if there
         are no more pages to look at
 
         NOTE: It's not really recommended to get too many pages, or send too many requests in general, as you can get rate limited quite fast
         
-        For reference, the endpoint called is: https://games.roblox.com/v1/games/[game id]/servers/[text that doesn't seem to mattter, maybe it's a server ID? Not sure, but it's just 'game' here]
+        For reference, the endpoint called is: https://games.roblox.com/v1/games/[game id]/servers/public (public because it's a public server)
         
         :param int place_id: The ID of the place (or game) to list servers for
+        :param str sort: How the servers should be sorted. Options are: "Desc" (from fullest to emptiest), and "Asc" (from emptiest to fullest)
+        :param bool exclude_full_servers: If results should include servers with the max amount of players
         :param int limit: How many servers to return, according to roblox: "Can only be 10, 25, 50, or 100"
         :param int pages: How many pages of limit servers to return'''
         # requesting it all the pages
@@ -39,14 +48,12 @@ class RobloxWindow(BasicWindow):
         }
 
         cookies = {
-            'GuestData': 'UserID=-121495612'
+            'GuestData': 'UserID=-1234567'
         }
-
-
         
         for i in range(pages):
             # constructing the full url to request
-            request_location = f'https://games.roblox.com/v1/games/{place_id}/servers/0?limit={limit}'
+            request_location = f'https://games.roblox.com/v1/games/{place_id}/servers/public?limit={limit}&sortOrder={sort}&excludeFullGames={exclude_full_servers}'
 
             # requesting it
             response = requests.get(request_location, headers=headers, params={'limit': limit, 'cursor': next_page_cursor}, cookies=cookies)
@@ -68,8 +75,45 @@ class RobloxWindow(BasicWindow):
         
         # returning the response(s)
         return servers
+    
+    def _run_roblox_in_seperate_thread(self, roblox_command: str):
+        '''Runs roblox_command with webbrowser.run, and opens it in a seperate thread
 
-    def open(self, place_id: int | None = None, game_instance_id: str | None = None):
+        This is pretty much used to make it non-blocking, but it will not terminate with the rest of the program, 
+        so the user has to close it themselves
+        
+        :param str roblox_command: This should be a command that'd open roblox (like 'roblox://?gameId=1818' for example)'''
+        self.roblox_thread = threading.Thread(target=webbrowser.open, args={roblox_command})
+
+        # starting the thread
+        self.roblox_thread.start()
+
+    def open(
+            self,
+            # I've seperated the following into 3 sections:
+            # what we should do on the app
+            # parameters for the app
+            # and tweaks for this method
+            # I did this because it was a lot for me to look at,
+            # not sure if this is proper practices, but oh well
+            open_home_page: bool = False,
+            join_game: bool = False,
+            open_conversations: bool = False,
+            open_user_profile: bool = False,
+            open_group: bool = False,
+            open_game_page: bool = False,
+            open_search: bool = False,
+
+            place_id: int | None = None,
+            game_instance_id: str | None = None,
+            user_id: str | None = None,
+            group_id: str | None = None,
+            search_query: str | None = None,
+            search_type: str | None = None,
+
+            roblox_url: str = 'roblox://',
+            command_ovveride: str | None = None
+            ):
         '''Opens Roblox using it's URL (URI?) scheme roblox://
 
         roblox:// should work for most non-official roblox clients, but if it doesn't
@@ -103,6 +147,8 @@ class RobloxWindow(BasicWindow):
         
         :param int place_id: The game (or place) to join when opening the app
         :param str game_instance_id: The game instance to join, you can get server info by using Roblox's api (https://games.roblox.com/v1/games/[game or place id]/servers/[you need to have text here, but it doesn't matter what]), or using our wrapper for it we implemented here
+        :param str roblox_url: The link to open roblox
+        :param str | None command_override: If the command we would run should be overwritten, and just run command_override instead
         '''
         # NOTE: All the parameters were grabbed from the following:
         # https://github.com/bloxstraplabs/bloxstrap/wiki/A-deep-dive-on-how-the-Roblox-bootstrapper-works#starting-roblox and
@@ -110,24 +156,61 @@ class RobloxWindow(BasicWindow):
         # so thanks peoples who made those! Not sure what a deeplink is, but I'll take whatever I can get
         
         # constructing the url to open
-        url = 'roblox://'
+        # first we add parameters
+        parameters = {}
 
-        # we also keep track if we've already added a ? yet, so
-        # we know if we should add &
-        parameter_character = '?'
-
-        # adding place id if we should
         if place_id:
-            url += f'{parameter_character}placeId={place_id}'
-            parameter_character = '&'
+            parameters['placeId'] = place_id
 
-        # adding place id if we should
         if game_instance_id:
-            url += f'{parameter_character}gameInstanceId={game_instance_id}'
-            parameter_character = '&'
+            parameters['gameInstanceId'] = game_instance_id
 
-        # if the url is still just plain roblox://, then we open roblox://a
-        if url == 'roblox://':
-            url = 'roblox://navigation/home'
+        if user_id:
+            parameters['userId'] = user_id
+        
+        if group_id:
+            parameters['groupId'] = group_id
 
-        webbrowser.open(url)
+        if search_query:
+            parameters['keyword'] = search_query
+
+        if search_type:
+            parameters['type'] = search_type
+
+        # next we turn those parameters into a string we can use
+        parameters_string: str = ''
+        # we have query character so we can know if we're supposed to use ?
+        # or &
+
+        # iterating over all keys and values and turning them into a str
+        query_character = '?'
+        for key in parameters.keys():
+            # adding the parameter
+            parameters_string += f'{query_character}{key}={parameters.get(key)}'
+
+            # changing the query character to & since only the first one should be ?
+            query_character = '&'
+
+        # now we construct the url to open
+        if command_ovveride:
+            url = command_ovveride
+        elif open_home_page:
+            url = f'{roblox_url}/navigation/home'
+        elif join_game:
+            url = f'{roblox_url}/experiences/start'
+        elif open_conversations:
+            url = f'{roblox_url}/navigation/chat'
+        elif open_user_profile:
+            url = f'{roblox_url}/navigation/profile'
+        elif open_group:
+            url = f'{roblox_url}/navigation/group'
+        elif open_game_page:
+            url = f'{roblox_url}/navigation/game_details'
+        elif open_search:
+            url = f'{roblox_url}/navigation/search'
+        # if we can't find anything, we default to the home page
+        else:
+            url = f'{roblox_url}/navigation/home'
+
+        # opening roblox
+        self._run_roblox_in_seperate_thread(url + parameters_string)
