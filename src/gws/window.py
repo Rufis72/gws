@@ -74,8 +74,6 @@ class BasicWindow:
             elif click_pos[1] > window_size[1] + window_position[1]:
                 raise OutOfBoundsInputError(f'Click at ({click_pos[0]}, {click_pos[1]}) has a bigger y than the window\'s size ({window_size[0]}, {window_size[1]})')
 
-        print(f'clicking: {click_pos}, {x}, {y}')
-
         # clicking
         self.window_manager.click(*click_pos, duration, button)
 
@@ -216,10 +214,8 @@ class BasicWindow:
 
         # scaling stuff if we're supposed to
         if scale:
-            print(x, y, width, height)
             # getting the scale
             scale_x, scale_y = self.calculate_scale(window_size)
-            print(scale_x, scale_y)
 
             # adjusting the x, y, width, and height based of the scale
             # NOTE: The reason we're turning scale from an (int, int) into 
