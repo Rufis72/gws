@@ -9,3 +9,6 @@ class OutOfBoundsInputError(Exception):
 
 class DependencyNotFound(Exception):
     pass
+
+class FailedNetworkRequest(Exception):
+    pass
