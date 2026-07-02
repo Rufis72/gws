@@ -3,7 +3,6 @@ from gws.window import BasicWindow
 from gws._errors import FailedNetworkRequest, WindowNotFoundError
 import requests
 import webbrowser
-import threading
 import time
 
 class RobloxWindow(BasicWindow):
@@ -218,7 +217,7 @@ class RobloxWindow(BasicWindow):
         window_names_before = self.window_manager.list_window_names()
 
         # opening roblox
-        self.roblox_thread = threading.Thread(target=webbrowser.open(url + parameters_string), daemon=True)
+        webbrowser.open(url + parameters_string)
 
         # getting all open windows afterwards, and finding
         # the ones that weren't open before
