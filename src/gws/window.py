@@ -245,6 +245,8 @@ class BasicWindow:
         confidence: float = 0.999,
         scale: bool = True,
         scale_image: bool = True,
+        needle_image_resampling: int = Resampling.BICUBIC,
+        haystack_image_resampling: int = Resampling.BICUBIC,
     ) -> Box | None:
         '''The logic here is incredibly similar to it's underlying
         library pyscreeze, so check there for docs. Pyautogui also
@@ -258,7 +260,9 @@ class BasicWindow:
         to pixel match)
         
         :param bool scale: If the given output should be scaled according to the macro resolution (if set)
-        :param bool scale_image: If the given image should be scaled along with everything else'''
+        :param bool scale_image: If the given image should be scaled along with everything else
+        :param int needle_image_resampling: How to rescale the image we're using to search . This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.
+        :param int haystack_image_resampling: How to rescale the image we're searching (the screenshot of the window in this case). This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.'''
         # capturing the window
         window_screenshot = self.screenshot()
 
@@ -279,12 +283,12 @@ class BasicWindow:
                 if scale_image:
                     # scaling the image we're looking for (the haystack image)
                     image = image.resize((
-                        ceil(image.size[0] * scale_x),
-                        ceil(image.size[1] * scale_y)
-                    ))
+                        ceil(image.size[0] / scale_x),
+                        ceil(image.size[1] / scale_y)
+                    ), resample=needle_image_resampling)
 
                 # scaling the image we're searching in (the needle image)
-                window_screenshot = window_screenshot.resize(self.macro_resolution)
+                window_screenshot = window_screenshot.resize(self.macro_resolution, resample=haystack_image_resampling)
 
         # finding a match for the image
         match = self.window_manager.locate(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
@@ -303,9 +307,13 @@ class BasicWindow:
         confidence: float = 0.999,
         scale: bool = True,
         scale_image: bool = True,
+        needle_image_resampling: int = Resampling.BICUBIC,
+        haystack_image_resampling: int = Resampling.BICUBIC,
     ) -> Generator[Box, None, None]:
         ''':param bool scale: If the given output should be scaled according to the macro resolution (if set)
-        :param bool scale_image: If the given image should be scaled along with everything else'''
+        :param bool scale_image: If the given image should be scaled along with everything else
+        :param int needle_image_resampling: How to rescale the image we're using to search. This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.
+        :param int haystack_image_resampling: How to rescale the image we're searching (the screenshot of the window in this case). This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.'''
 
         # capturing the window
         window_screenshot = self.screenshot()
@@ -327,9 +335,12 @@ class BasicWindow:
                 if scale_image:
                     # scaling the image we're looking for (the haystack image)
                     image = image.resize((
-                        ceil(image.size[0] * scale_x),
-                        ceil(image.size[1] * scale_y)
-                    ))
+                        ceil(image.size[0] / scale_x),
+                        ceil(image.size[1] / scale_y)
+                    ), resample=needle_image_resampling)
+
+                # scaling the image we're searching in (the needle image)
+                window_screenshot = window_screenshot.resize(self.macro_resolution, resample=haystack_image_resampling)
 
                 # scaling the image we're searching in (the needle image)
                 window_screenshot = window_screenshot.resize(self.macro_resolution)
@@ -352,10 +363,14 @@ class BasicWindow:
         step: int = 1,
         confidence: float = 0.999,
         scale: bool = True,
-        scale_image: bool = True
+        scale_image: bool = True,
+        needle_image_resampling: int = Resampling.BICUBIC,
+        haystack_image_resampling: int = Resampling.BICUBIC,
     ) -> Point | None:
         ''':param bool scale: If the given output should be scaled according to the macro resolution (if set)
-        :param bool scale_image: If the given image should be scaled along with everything else'''
+        :param bool scale_image: If the given image should be scaled along with everything else
+        :param int needle_image_resampling: How to rescale the image we're using to search. This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.
+        :param int haystack_image_resampling: How to rescale the image we're searching (the screenshot of the window in this case). This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.'''
         # capturing the window
         window_screenshot = self.screenshot()
 
@@ -376,12 +391,12 @@ class BasicWindow:
                 if scale_image:
                     # scaling the image we're looking for (the haystack image)
                     image = image.resize((
-                        ceil(image.size[0] * scale_x),
-                        ceil(image.size[1] * scale_y)
-                    ))
+                        ceil(image.size[0] / scale_x),
+                        ceil(image.size[1] / scale_y)
+                    ), resample=needle_image_resampling)
 
                 # scaling the image we're searching in (the needle image)
-                window_screenshot = window_screenshot.resize(self.macro_resolution)
+                window_screenshot = window_screenshot.resize(self.macro_resolution, resample=haystack_image_resampling)
 
         # finding a match for the image
         match = self.window_manager.locate_center(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
