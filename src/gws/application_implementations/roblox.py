@@ -133,10 +133,20 @@ class RobloxWindow(BasicWindow):
         will let you just run your own uri
 
         for info on how to use it, I found here quite helpful: https://github.com/RoSeal-Extension/Roblox-DeepLink-Parser
-        
-        :param int place_id: The game (or place) to join when opening the app
-        :param str game_instance_id: The game instance to join, you can get server info by using Roblox's api (https://games.roblox.com/v1/games/[game or place id]/servers/[you need to have text here, but it doesn't matter what]), or using our wrapper for it we implemented here
-        :param str roblox_url: The link to open roblox
+        :param bool open_home_page: If roblox should launch into the home page when opening
+        :param bool join_game: If roblox should launch into a game when opening
+        :param bool open_conversation: If roblox should launch into the conversations page/a conversation with a specific user if user_id is given
+        :param bool open_user_profile: If roblox should launch into a users profile. Requires user_id to be set
+        :param bool open_group: If roblox should launch into a group page. Requires group_id to be set
+        :param bool open_game_page: If roblox should launch into a game's details page
+        :param bool open_search: If roblox should launch into the search menu with a given prompt (search_query)
+        :param int place_id: The id of a game (place? experience?) to either join if join_game is true, or to view the page for if open_game_page is true
+        :param str game_instance_id: The id of a specific server to join, these can be gotten from self.list_servers, and they'll be in the id field
+        :param str user_id: The ID of a user to either view (if open_user_profile is true), or open a conversation page with (if open_conversations is true)
+        :param str group_id: The id of the group to view (if open_group is true)
+        :param str search_query: The query to search if open_search is true
+        :param str search_type: The type of thing to search. I haven't tested, but I'd guess it's "Games", "People", "Marketplace", "Communities", "CreatorStore"
+        :param str roblox_url: The link to open roblox. By default is "roblox://"
         :param str | None command_override: If the command we would run should be overwritten, and just run command_override instead
         :param int roblox_opening_time_timeout: How long to try to find the roblox window until we just give up and say we couldn't find the roblox window.
         '''
