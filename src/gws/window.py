@@ -82,7 +82,7 @@ class BasicWindow:
         size "canvas" the macro is designed to "paint". 
         This automatically sets the scale for the macro, so
         you could design for a, for example, 1000x1000 window,
-        and click at the bottom left most spot ((1000, 1000) in this
+        and click at the bottom left most spot ((0, 1000) in this
         case), and even if the window isn't 1000x1000, it'll scale it
         so that you're still clicking in the bottom left corner.
         Or if you wanted to click at (200, 0), it'll scale that
@@ -202,6 +202,7 @@ class BasicWindow:
         
         If you want to take a screenshot that spans more than window, use your window manager's screenshot 
         or screenshot_region methods instead.
+        
         :param int x: The starting x for the screenshot region
         :param int y: The starting y for the screenshot region
         :param int width: the width of the screenshot region
@@ -248,16 +249,24 @@ class BasicWindow:
         needle_image_resampling: int = Resampling.BICUBIC,
         haystack_image_resampling: int = Resampling.BICUBIC,
     ) -> Box | None:
-        '''The logic here is incredibly similar to it's underlying
-        library pyscreeze, so check there for docs. Pyautogui also
-        uses pyscreeze under the hood, and pretty much just wraps it
-        so you can check their docs over there too.
-        
+        '''This is pretty much a wrapper for pyscreeze.locate, but we also implement some scaling logic,
+        and also taking screenshots. So, for more help regarding the how stuff is found, check out there first!
+        This also means, that we only have docs here for our custom in house logic, as I'm also not 100% sure
+        what some of these things means, and I wouldn't want to spread misinformation. Sorry about that!
+
+        Also, pyautogui pretty much just also wraps pyscreeze, so if you're trying to find a Stack Overflow
+        thread or something like that for an issue, you can also try searching for that, but pyautogui.
+
         This function locates and returns the first match of
         the given image it finds in a screenshot of the window.
         How well it has to match can be changed by changing 
         confidence (0 is anything matches 1 is exact pixel 
         to pixel match)
+        
+        Also, be warned, that if you're designed resolution is lower than the size of the window, or is 
+        just a little bigger, (like window is 2500x1000, and macro was designed for 2600x1200), then the image
+        you're using to search (the needle image) could get scaled from like 10x10 to 11x12, and that's gonna be
+        very blurry. So try to design macros with higher resolutions then the real world when possible.
         
         :param bool scale: If the given output should be scaled according to the macro resolution (if set)
         :param bool scale_image: If the given image should be scaled along with everything else
@@ -310,7 +319,25 @@ class BasicWindow:
         needle_image_resampling: int = Resampling.BICUBIC,
         haystack_image_resampling: int = Resampling.BICUBIC,
     ) -> Generator[Box, None, None]:
-        ''':param bool scale: If the given output should be scaled according to the macro resolution (if set)
+        '''This is pretty much a wrapper for pyscreeze.locate_all, but we also implement some scaling logic,
+        and also taking screenshots. So, for more help regarding the how stuff is found, check out there first!
+        This also means, that we only have docs here for our custom in house logic, as I'm also not 100% sure
+        what some of these things means, and I wouldn't want to spread misinformation. Sorry about that!
+
+        Also, pyautogui pretty much just also wraps pyscreeze, so if you're trying to find a Stack Overflow
+        thread or something like that for an issue, you can also try searching for that, but pyautogui.
+
+        This function finds, and returns the locations of everywhere it finds some image inside another image.
+        How well the image has to match part of the other image is set by confidence. Also, there's scaling,
+        meaning if you designed the macro/whatever you're doing for one resolution, but the window is another,
+        it can automatically scale it for you. 
+        
+        Also, be warned, that if you're designed resolution is lower than the size of the window, or is 
+        just a little bigger, (like window is 2500x1000, and macro was designed for 2600x1200), then the image
+        you're using to search (the needle image) could get scaled from like 10x10 to 11x12, and that's gonna be
+        very blurry. So try to design macros with higher resolutions then the real world when possible.
+        
+        :param bool scale: If the given output should be scaled according to the macro resolution (if set)
         :param bool scale_image: If the given image should be scaled along with everything else
         :param int needle_image_resampling: How to rescale the image we're using to search. This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.
         :param int haystack_image_resampling: How to rescale the image we're searching (the screenshot of the window in this case). This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.'''
@@ -367,7 +394,25 @@ class BasicWindow:
         needle_image_resampling: int = Resampling.BICUBIC,
         haystack_image_resampling: int = Resampling.BICUBIC,
     ) -> Point | None:
-        ''':param bool scale: If the given output should be scaled according to the macro resolution (if set)
+        '''This is pretty much a wrapper for pyscreeze.locate_all, but we also implement some scaling logic,
+        and also taking screenshots. So, for more help regarding the how stuff is found, check out there first!
+        This also means, that we only have docs here for our custom in house logic, as I'm also not 100% sure
+        what some of these things means, and I wouldn't want to spread misinformation. Sorry about that!
+
+        Also, pyautogui pretty much just also wraps pyscreeze, so if you're trying to find a Stack Overflow
+        thread or something like that for an issue, you can also try searching for that, but pyautogui.
+
+        This function is pretty much the same as locate_on_window, where it searches a screenshot of the
+        window, then returns the first thing that matches (well enough, how well is decided by confidence)
+        the needle image. The only difference, is that instead of returning a rectangle for where it found
+        the match, it just returns the center of it.
+        
+        Also, be warned, that if you're designed resolution is lower than the size of the window, or is 
+        just a little bigger, (like window is 2500x1000, and macro was designed for 2600x1200), then the image
+        you're using to search (the needle image) could get scaled from like 10x10 to 11x12, and that's gonna be
+        very blurry. So try to design macros with higher resolutions then the real world when possible.
+        
+        :param bool scale: If the given output should be scaled according to the macro resolution (if set)
         :param bool scale_image: If the given image should be scaled along with everything else
         :param int needle_image_resampling: How to rescale the image we're using to search. This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.
         :param int haystack_image_resampling: How to rescale the image we're searching (the screenshot of the window in this case). This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.'''
