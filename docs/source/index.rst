@@ -27,4 +27,4 @@ for. When doing this, there are general best practices, which you can see :ref:`
 
    quick_start
    best_practices
-
+   installation
