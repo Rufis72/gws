@@ -364,7 +364,6 @@ Now, you've just made a basic macro! Thanks for sticking with the quick start, a
 hope the rest of the docs can answer any questions you may run into!
 
 A few things that are good to know:
-* If you ever want to disable scaling, any method that scales stuff also has a scale parameter, which you can just set to False. 
-Be careful that you don't pass scaled stuff into a function, then tell it now to scale it back down! I've done this a few times,
-and it can be quite annoying to debug
+
+* If you ever want to disable scaling, any method that scales stuff also has a scale parameter, which you can just set to False. Be careful that you don't pass scaled stuff into a function, then tell it now to scale it back down! I've done this a few times, and it can be quite annoying to debug
 * The doc strings for the actual methods will be more up to date and detailed then what's online here
