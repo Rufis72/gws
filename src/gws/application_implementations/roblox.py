@@ -132,6 +132,7 @@ class RobloxWindow(BasicWindow):
         will let you just run your own uri
 
         for info on how to use it, I found here quite helpful: https://github.com/RoSeal-Extension/Roblox-DeepLink-Parser
+        
         :param bool open_home_page: If roblox should launch into the home page when opening
         :param bool join_game: If roblox should launch into a game when opening
         :param bool open_conversation: If roblox should launch into the conversations page/a conversation with a specific user if user_id is given
