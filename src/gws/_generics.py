@@ -4,6 +4,7 @@ import time
 import subprocess
 from gws._errors import DependencyNotFound
 from gws.window import BasicWindow
+from gws._dependency_management import requires_grim, requires_wayland_utils, requires_wtype
 from typing import TYPE_CHECKING, Any, Generator
 from PIL import Image
 from io import BytesIO
@@ -317,6 +318,7 @@ class GenericWaylandWindowManager(GenericWindowManager):
         self.mouse = wayland_automation.Mouse()
         self.keyboard = wayland_automation.Keyboard()
 
+    @requires_wayland_utils
     def get_monitor_data(self) -> list[dict[str, str | int | float]]:
         '''Returns the data from wayland-info -i zxdg_output_manager_v1, and parses it to
         be more usable'''
@@ -324,13 +326,8 @@ class GenericWaylandWindowManager(GenericWindowManager):
         try:
             wayland_info_output = subprocess.run(['wayland-info', '-i', 'zxdg_output_manager_v1'], check=True, text=True, capture_output=True).stdout
         except subprocess.CalledProcessError as e:
-            # if it's wayland-info not found, we say that the dependency couldn't be found.
-            # otherwise we just pass the error along to the user
-            if str(e.stderr).__contains__('wayland-info: command not found'):
-                raise DependencyNotFound(f'An error was encountered when trying to run wayland-info, which appears to be related to it not being on PATH/not being installed. Do you have wayland-info installed? This is the given error message: \n{e}')
-            else:
-                raise Exception(f'Got an error when running "wayland-info -i zxdg_output_manager": {e}')
-            
+            raise Exception(f'Got an error when running "wayland-info -i zxdg_output_manager": {e}')
+        
         # parsing the screen data
         # first we get the interface data for each monitor
         # we remove the first one because that's before the interface. So it's ['', '...', ...]
@@ -386,6 +383,7 @@ class GenericWaylandWindowManager(GenericWindowManager):
         # returning the final data
         return monitor_data
 
+    @requires_wayland_utils
     def get_screen_space_rectangle(self) -> tuple[int, int]:
         '''This takes however the user has arranged their screens
         and their sizes and turns it into one big rect for the total screen size.
@@ -466,6 +464,7 @@ class GenericWaylandWindowManager(GenericWindowManager):
         height, width = self.get_screen_space_rectangle()
         self.mouse.send_motion_absolute(x, y, 2560 + 1920, 1440)
 
+    @requires_wtype
     def key_down(self, key: str):
         try:
             subprocess.run(['wtype', '-P', key], check=True)
@@ -475,6 +474,7 @@ class GenericWaylandWindowManager(GenericWindowManager):
             else:
                 raise Exception(f'Got an error when running "wtype -P {key}": {e}')
 
+    @requires_wtype
     def key_up(self, key: str):
         try:
             subprocess.run(['wtype', '-p', key])
@@ -484,6 +484,7 @@ class GenericWaylandWindowManager(GenericWindowManager):
             else:
                 raise Exception(f'Got an error when running "wtype -p {key}": {e}')
     
+    @requires_grim
     def screenshot_region(self, x: int, y: int, width: int, height: int) -> Image.Image:
         try:
             grim_output = subprocess.run(['grim', '-g', f'{x},{y} {width}x{height}', '-'], stdout=subprocess.PIPE, check=True).stdout
@@ -495,7 +496,7 @@ class GenericWaylandWindowManager(GenericWindowManager):
         # turning the png (or other file format) output into an image object
         return Image.open(BytesIO(grim_output)).convert('RGBA')
 
-    
+    @requires_grim
     def screenshot(self) -> Image.Image:
         try:
             grim_output = subprocess.run(['grim', '-'], stdout=subprocess.PIPE, check=True).stdout
@@ -506,9 +507,6 @@ class GenericWaylandWindowManager(GenericWindowManager):
         
         # turning the png (or other file format) output into an image object
         return Image.open(BytesIO(grim_output)).convert('RGBA')
-            
-
-
        
 
 class GenericNonWaylandWindowManager(GenericWindowManager):
