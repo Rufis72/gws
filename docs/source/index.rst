@@ -18,7 +18,7 @@ GWS is a cross platform macro library that aims to make it as easy to write repr
 macros that work on every system. In practice, this means we abstract os/system dependant
 stuff. We also make it so you can just macro a window, and we can
 handle scaling input and such if the window is a different size then what the macro was designed
-for. When doing this, there are general best practices, which you can see :ref:`scaling-best-practices`.
+for. When doing this, there are general best practices (see :ref:`scaling-best-practices`).
 
 
 .. toctree::
