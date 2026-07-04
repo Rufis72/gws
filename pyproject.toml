@@ -9,9 +9,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "pyautogui (>=0.9.54,<0.10.0)",
-    "wayland-automation (>=0.2.8,<0.3.0)",
     "typing-extensions (>=4.15.0,<5.0.0)",
-    "pyobjc (>=12.2.1,<13.0.0)",
     "pillow (>=12.2.0,<13.0.0)",
     "opencv-python (>=4.13.0.92,<5.0.0.0)",
     "requests (>=2.34.2,<3.0.0)",
