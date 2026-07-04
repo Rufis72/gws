@@ -305,6 +305,24 @@ class GenericWindowManager(metaclass=ABCMeta):
             return pyscreeze.center(match_coords)
         
 
+    def get_pixel(self, x: int, y: int) -> tuple[int, int, int, int]:
+        '''Returns a RGBA tuple of a pixel on the screen.
+        
+        This method literally takes a screenshot of the
+        entire screen, the extracts one pixel, so if
+        you may need the screenshot we're getting here,
+        it's far more optimal to just take the screenshot,
+        then use .pixel on the image
+        
+        :param int x: The x position of the pixel to get
+        :param int y: The y position of the pixel to get'''
+        # taking a screenshot
+        screenshot = self.screenshot()
+
+        # getting the pixel
+        return screenshot.getpixel((x, y))
+        
+
 
 class GenericWaylandWindowManager(GenericWindowManager):
     '''The base class for most Wayland compositors. It provides input and image capture support

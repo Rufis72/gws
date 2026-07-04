@@ -234,6 +234,38 @@ class BasicWindow:
         # taking a screenshot and returning it
         return self.window_manager.screenshot_region(window_position[0] + x, window_position[1] + y, width, height)
     
+    def get_pixel(self, x: int, y: int, scale: bool = True) -> tuple[int, int, int, int]:
+        '''Returns a RGBA tuple of a pixel on the window.
+        
+        This method literally takes a screenshot of the
+        entire window, the extracts one pixel, so if
+        you may need the screenshot we're getting here,
+        it's far more optimal to just take the screenshot,
+        then use .pixel on the image. You would of course,
+        then also need to handle scaling if you did this,
+        but you can just use your_window_variable.scale_point((your, point), your_window_variable.get_scale())
+
+        If the pixel you're trying to access
+        
+        :param int x: The x position of the pixel to get
+        :param int y: The y position of the pixel to get
+        :param bool scale: If the x and y should be scaled
+        to the actual size of the window'''
+        # scaling if we should
+        if scale:
+            x, y = self.scale_point((x, y), self.get_scale())
+
+        # getting a screenshot of the window
+        window_screenshot = self.screenshot()
+
+        # making sure the pixel isn't outside
+        # of the image
+        if x > window_screenshot.size[0] or y > window_screenshot.size[1]:
+            raise OutOfBoundsInputError(f'The pixel you\'re trying to access ({x}, {y}) is outside of the window. (The window is {window_screenshot.size[0]}, {window_screenshot.size[1]})')
+        
+        # returning the pixel
+        return window_screenshot.getpixel((x, y))
+    
     def locate_on_window(
         self,
         image: str | Image.Image | Any,
@@ -277,7 +309,7 @@ class BasicWindow:
 
         # if we were given the path to an image, opening it
         if type(image) == str:
-            image: Image.Image = Image.open(image)
+            image = Image.open(image)
 
         # if we're supposed to scale the image we're looking for, scaling the image
         # we scale both the screenshot, and the image we're looking for
