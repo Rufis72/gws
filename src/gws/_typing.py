@@ -11,7 +11,7 @@ class WindowLike(Protocol):
 
     def __init__(self, window_manager: WindowManagerLike, id: str) -> None: ...
     def set_macro_resolution(self, width: int, height: int): ...
-    def calculate_scale(self, window_size: tuple[int, int]): ...
+    def calculate_scale(self, window_size: tuple[int, int]) -> tuple[float, float]: ...
     def get_scale(self) -> tuple[float, float]: ...
     def scale_point(self, point: tuple[int, int], scale: tuple[float, float]) -> tuple[int, int]: ...
     def get_name(self) -> str: ...
@@ -21,13 +21,12 @@ class WindowLike(Protocol):
     def key_down(self, key: str): ...
     def key_up(self, key: str): ...
     def press(self, key: str, duration: float): ...
-    def typewrite(self, text: str, hold_duration: float = 0.09, spacing_duration: float = 0, scale: bool = True): ...
+    def typewrite(self, text: str, hold_duration: float = 0.09, spacing_duration: float = 0): ...
     def screenshot(self) -> Image.Image: ...
     def screenshot_region(self, x: int, y: int, width: int, height: int, scale: bool = True) -> Image.Image: ...
     def locate_on_window(
         self,
         image: str | Image.Image | Any,
-        minSearchTime: float = 0,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -53,9 +52,8 @@ class WindowLike(Protocol):
         self,
         image: str | Image.Image | Any,
         *,
-        minSearchTime: float = 0,
         grayscale: bool | None = None,
-        limit=None,
+        limit: int = 1,
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
@@ -83,8 +81,8 @@ class WindowManagerLike(Protocol):
     def list_window_names(self) -> list[str]: ...
     def locate(
         self,
-        needleImage: str | Image.Image | Any,
-        haystackImage: str | Image.Image | Any,
+        needle_image: str | Image.Image | Any,
+        haystack_image: str | Image.Image | Any,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -95,8 +93,8 @@ class WindowManagerLike(Protocol):
 
     def locate_all(
         self,
-        needleImage: str | Image.Image | Any,
-        haystackImage: str | Image.Image | Any,
+        needle_image: str | Image.Image | Any,
+        haystack_image: str | Image.Image | Any,
         grayscale: bool | None = None,
         limit: int = 10000,
         region: tuple[int, int, int, int] | None = None,
@@ -107,7 +105,6 @@ class WindowManagerLike(Protocol):
     def locate_on_screen(
         self,
         image: str | Image.Image | Any,
-        minSearchTime: float = 0,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -129,12 +126,11 @@ class WindowManagerLike(Protocol):
 
     def locate_center(
         self,
-        needleImage: str | Image.Image | Any,
-        haystackImage: str | Image.Image | Any,
+        needle_image: str | Image.Image | Any,
+        haystack_image: str | Image.Image | Any,
         *,
-        minSearchTime: float = 0,
         grayscale: bool | None = None,
-        limit=None,
+        limit: int = 1,
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
@@ -144,9 +140,8 @@ class WindowManagerLike(Protocol):
         self,
         image: str | Image.Image | Any,
         *,
-        minSearchTime: float = 0,
         grayscale: bool | None = None,
-        limit=None,
+        limit: int = 1,
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,

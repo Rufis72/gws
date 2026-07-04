@@ -202,7 +202,7 @@ class BasicWindow:
         
         If you want to take a screenshot that spans more than window, use your window manager's screenshot 
         or screenshot_region methods instead.
-        
+
         :param int x: The starting x for the screenshot region
         :param int y: The starting y for the screenshot region
         :param int width: the width of the screenshot region
@@ -237,7 +237,7 @@ class BasicWindow:
     def locate_on_window(
         self,
         image: str | Image.Image | Any,
-        minSearchTime: float = 0,
+        min_search_time: float = 0,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -383,7 +383,7 @@ class BasicWindow:
         self,
         image: str | Image.Image | Any,
         *,
-        minSearchTime: float = 0,
+        min_search_time: float = 0,
         grayscale: bool | None = None,
         limit=None,
         region: tuple[int, int, int, int] | None = None,

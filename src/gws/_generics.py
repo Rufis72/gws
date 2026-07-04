@@ -149,7 +149,7 @@ class GenericWindowManager(metaclass=ABCMeta):
             if not i == len(text) + 1:
                 time.sleep(interval)
 
-    def list_windows(self) -> list[str]:
+    def list_window_names(self) -> list[str]:
         '''Returns the titles/names of all windows'''
         ...
 
@@ -176,8 +176,8 @@ class GenericWindowManager(metaclass=ABCMeta):
 
     def locate(
         self,
-        needleImage: str | Image.Image | Any,
-        haystackImage: str | Image.Image | Any,
+        needle_image: str | Image.Image | Any,
+        haystack_image: str | Image.Image | Any,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -187,12 +187,12 @@ class GenericWindowManager(metaclass=ABCMeta):
     ) -> pyscreeze.Box | None:
         '''This is a wrapper for pyscreeze.locateAll, so refer to there for documentation.
         Pyautogui also pretty much wraps pyscreeze, so they may have useful docs over there too.'''
-        return pyscreeze.locate(needleImage, haystackImage, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+        return pyscreeze.locate(needle_image, haystack_image, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
 
     def locate_all(
         self,
-        needleImage: str | Image.Image | Any,
-        haystackImage: str | Image.Image | Any,
+        needle_image: str | Image.Image | Any,
+        haystack_image: str | Image.Image | Any,
         grayscale: bool | None = None,
         limit: int = 10000,
         region: tuple[int, int, int, int] | None = None,
@@ -201,12 +201,11 @@ class GenericWindowManager(metaclass=ABCMeta):
     ) -> Generator[pyscreeze.Box, None, None]:
         '''This is a wrapper for pyscreeze.locateAll, so refer to there for documentation.
         Pyautogui also pretty much wraps pyscreeze, so they may have useful docs over there too.'''
-        return pyscreeze.locateAll(needleImage, haystackImage, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+        return pyscreeze.locateAll(needle_image, haystack_image, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
 
     def locate_on_screen(
         self,
         image: str | Image.Image | Any,
-        minSearchTime: float = 0,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -253,12 +252,11 @@ class GenericWindowManager(metaclass=ABCMeta):
     
     def locate_center(
         self,
-        needleImage: str | Image.Image | Any,
-        haystackImage: str | Image.Image | Any,
+        needle_image: str | Image.Image | Any,
+        haystack_image: str | Image.Image | Any,
         *,
-        minSearchTime: float = 0,
         grayscale: bool | None = None,
-        limit=None,
+        limit: int = 1,
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
@@ -269,7 +267,7 @@ class GenericWindowManager(metaclass=ABCMeta):
         for the match, and how big it was (really just the size of the needleImage), it just returns
         the center of where it found it'''
         # locating the image on the screen
-        match_coords = self.locate(needleImage, haystackImage, grayscale=grayscale, region=region, step=step, confidence=confidence)
+        match_coords = self.locate(needle_image, haystack_image, grayscale=grayscale, region=region, step=step, confidence=confidence, limit=limit)
 
         # if we couldn't find a match we return none
         if match_coords is None:
@@ -282,7 +280,7 @@ class GenericWindowManager(metaclass=ABCMeta):
         self,
         image: str | Image.Image | Any,
         *,
-        minSearchTime: float = 0,
+        min_search_time: float = 0,
         grayscale: bool | None = None,
         limit: int = 1,
         region: tuple[int, int, int, int] | None = None,
@@ -297,7 +295,7 @@ class GenericWindowManager(metaclass=ABCMeta):
         This function is the same as locate_on_screen, but instead of returning the top left corner,
         it returns the center.'''
         # locating the image on the screen
-        match_coords = self.locate_on_screen(image, minSearchTime, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+        match_coords = self.locate_on_screen(image, min_search_time, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
 
         # if we couldn't find a match we return none
         if match_coords is None:
