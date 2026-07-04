@@ -31,3 +31,14 @@ As an example, let's say you're designing a macro for a 4k monitor (
 LCM of 3840, and 2560. That's gonna be 7680. Next, you'll find the LCM of
 1440 and 2160. That's 4320. Great! Now you've got your macro's resolution,
 7680x4320!
+
+Optimization
+-------------
+
+Not-redoing costly operations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Generally, you won't want to re-do operations that take a lot of compute
+because it'll be quite slow. These are pretty much just the methods where
+you're finding x image in another image. So locate_on_screen, locate_on_window,
+locate_all, etc. So, just generally avoid re-doing these operations a ton
