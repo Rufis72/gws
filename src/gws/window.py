@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Generator, Any
 from gws._errors import OutOfBoundsInputError
 from PIL import Image
 from pyscreeze import Box, Point
-from math import ceil
+from math import ceil, lcm
 from PIL.Image import Resampling
 
 if TYPE_CHECKING:
@@ -266,9 +266,67 @@ class BasicWindow:
         # returning the pixel
         return window_screenshot.getpixel((x, y))
     
+    def _scale_window_screenshot_with_lcm(self, screenshot: Image.Image) -> Image.Image:
+        '''The way that we scale screenshots is somewhat complicated. Basically,
+        imagine we've got a window of 100x100, but a macro designed for 200x200,
+        and we're looking for an image that was taken on that 200x200 window.
+        Easy, we just scale the screenshot by 2, great! What happens if the
+        window the macro was designed for was 110x110. Well now we've got a 
+        scale of (1.1, 1.1), and that'll be all blurry and bad for finding stuff.
+        So, we get the lowest common multiple of the two, that way it stays whole numbers
+        
+        :param PIL.Image.Image screenshot: The screenshot to scale'''
+        # if there's no scaling to be done, we don't
+        if self.macro_resolution is None:
+            return screenshot
+    
+        else:
+            # first we calculate the size we'll
+            # scale the screenshot to
+            # to do that, we need to get the window size
+            # luckily, the screenshot of the window is the
+            # size of the window!
+            window_size = screenshot.size
+            scaled_screenshot_size = (
+                lcm(self.macro_resolution[0], window_size[0]), 
+                lcm(self.macro_resolution[1], window_size[1])
+            )
+
+            # if we still won't be scaling it, returning the screenshot
+            if scaled_screenshot_size == window_size:
+                return screenshot
+
+            # scaling and returning the window
+            return screenshot.resize(scaled_screenshot_size)
+        
+    def _scale_needle_image_with_lcm(self, image: Image.Image, window_size: None | tuple[int, int] = None) -> Image.Image:
+        '''Scales the needle image by the same scale factor the window screenshot would be scaled by
+        
+        :param PIL.Image.Image image: The needle image to scale
+        :param None | tuple[int, int] window_size: The size of the window, if not passed we can get it on our own'''
+        # if there's no macro resolution, we don't scale anything
+        if self.macro_resolution is None:
+            return image
+
+        # if window size is None, we get it ourselves
+        if window_size is None:
+            window_size = self.get_size()
+
+        # first we calculate the scale factor we would/are scale the haystack image by
+        scale_x = lcm(window_size[0], self.macro_resolution[0]) / window_size[0]
+        scale_y = lcm(window_size[1], self.macro_resolution[1]) / window_size[1]
+
+        scaled_image = image.resize((
+            int(image.size[0] * scale_x),
+            int(image.size[1] * scale_y))
+        )
+
+        # returning the scaled image
+        return scaled_image
+    
     def locate_on_window(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         min_search_time: float = 0,
         *,
         grayscale: bool | None = None,
@@ -276,8 +334,8 @@ class BasicWindow:
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-        scale: bool = True,
-        scale_image: bool = True,
+        scale_haystack_image: bool = True,
+        scale_needle_image: bool = True,
         needle_image_resampling: int = Resampling.BICUBIC,
         haystack_image_resampling: int = Resampling.BICUBIC,
     ) -> Box | None:
@@ -294,63 +352,66 @@ class BasicWindow:
         How well it has to match can be changed by changing 
         confidence (0 is anything matches 1 is exact pixel 
         to pixel match)
+
+        Warning, if you're using choose_image_size_with_lowest_common_multiple, it'll scale images when
+        finding stuff to the lowest common multiple, which is great for accuracy, but not great for
+        speed.
         
-        Also, be warned, that if you're designed resolution is lower than the size of the window, or is 
-        just a little bigger, (like window is 2500x1000, and macro was designed for 2600x1200), then the image
-        you're using to search (the needle image) could get scaled from like 10x10 to 11x12, and that's gonna be
-        very blurry. So try to design macros with higher resolutions then the real world when possible.
-        
-        :param bool scale: If the given output should be scaled according to the macro resolution (if set)
-        :param bool scale_image: If the given image should be scaled along with everything else
+        :param bool scale_needle_image: If the given image should be scaled to a happy medium with the haystack image (their lowest common multiple)
+        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)
         :param int needle_image_resampling: How to rescale the image we're using to search . This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.
         :param int haystack_image_resampling: How to rescale the image we're searching (the screenshot of the window in this case). This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.'''
         # capturing the window
         window_screenshot = self.screenshot()
 
+        # getting the size of the window from the screenshot we just took
+        window_size = window_screenshot.size
+
         # if we were given the path to an image, opening it
         if type(image) == str:
             image = Image.open(image)
 
-        # if we're supposed to scale the image we're looking for, scaling the image
-        # we scale both the screenshot, and the image we're looking for
-        if scale:
-            # getting the scale
-            scale_x, scale_y = self.get_scale()
+        # only checking what stuff we're supposed to scale if we would even do anything
+        if self.macro_resolution is not None:
+            if scale_haystack_image:
+                window_screenshot = self._scale_window_screenshot_with_lcm(window_screenshot)
 
-            # if the scale isn't (1, 1) (meaning we have to actually
-            # scale stuff ):
-            if (scale_x, scale_y) != (1, 1):
-                # scaling the image IF we're supposed to
-                if scale_image:
-                    # scaling the image we're looking for (the haystack image)
-                    image = image.resize((
-                        ceil(image.size[0] / scale_x),
-                        ceil(image.size[1] / scale_y)
-                    ), resample=needle_image_resampling)
-
-                # scaling the image we're searching in (the needle image)
-                window_screenshot = window_screenshot.resize(self.macro_resolution, resample=haystack_image_resampling)
+            if scale_needle_image:
+                image = self._scale_needle_image_with_lcm(image, window_size)
 
         # finding a match for the image
         match = self.window_manager.locate(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
 
-        # returning the match
+        # if we got None, returning that
+        if match is None:
+            return None
+
+        # if we scaled things up, we scale them back down to
+        # the macro resolution
+        if self.macro_resolution is not None and scale_haystack_image:
+            # calculating scale
+            scale_x = lcm(window_size[0], self.macro_resolution[0]) / self.macro_resolution[0]
+            scale_y = lcm(window_size[1], self.macro_resolution[1]) / self.macro_resolution[1]
+
+            return Box(int(match.left / scale_x), int(match.top / scale_y), int(match.width / scale_x), int(match.height / scale_y))
+
+        # returning the matches
         return match
 
     def locate_all_on_window(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 10000,
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-        scale: bool = True,
-        scale_image: bool = True,
+        scale_haystack_image: bool = True,
+        scale_needle_image: bool = True,
         needle_image_resampling: int = Resampling.BICUBIC,
         haystack_image_resampling: int = Resampling.BICUBIC,
-    ) -> Generator[Box, None, None]:
+    ) -> list[Box]:
         '''This is pretty much a wrapper for pyscreeze.locate_all, but we also implement some scaling logic,
         and also taking screenshots. So, for more help regarding the how stuff is found, check out there first!
         This also means, that we only have docs here for our custom in house logic, as I'm also not 100% sure
@@ -369,62 +430,61 @@ class BasicWindow:
         you're using to search (the needle image) could get scaled from like 10x10 to 11x12, and that's gonna be
         very blurry. So try to design macros with higher resolutions then the real world when possible.
         
-        :param bool scale: If the given output should be scaled according to the macro resolution (if set)
-        :param bool scale_image: If the given image should be scaled along with everything else
+        :param bool scale_needle_image: If the given image should be scaled to a happy medium with the haystack image (their lowest common multiple)
+        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)
         :param int needle_image_resampling: How to rescale the image we're using to search. This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.
         :param int haystack_image_resampling: How to rescale the image we're searching (the screenshot of the window in this case). This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.'''
 
         # capturing the window
         window_screenshot = self.screenshot()
 
+        # getting the size of the window from the screenshot we just took
+        window_size = window_screenshot.size
+
         # if we were given the path to an image, opening it
         if type(image) == str:
-            image: Image.Image = Image.open(image)
+            image = Image.open(image)
 
-        # if we're supposed to scale the image we're looking for, scaling the image
-        # we scale both the screenshot, and the image we're looking for
-        if scale:
-            # getting the scale
-            scale_x, scale_y = self.get_scale()
+        # only checking what stuff we're supposed to scale if we would even do anything
+        if self.macro_resolution is not None:
+            if scale_haystack_image:
+                window_screenshot = self._scale_window_screenshot_with_lcm(window_screenshot)
 
-            # if the scale isn't (1, 1) (meaning we have to actually
-            # scale stuff ):
-            if (scale_x, scale_y) != (1, 1):
-                # scaling the image IF we're supposed to
-                if scale_image:
-                    # scaling the image we're looking for (the haystack image)
-                    image = image.resize((
-                        ceil(image.size[0] / scale_x),
-                        ceil(image.size[1] / scale_y)
-                    ), resample=needle_image_resampling)
-
-                # scaling the image we're searching in (the needle image)
-                window_screenshot = window_screenshot.resize(self.macro_resolution, resample=haystack_image_resampling)
-
-                # scaling the image we're searching in (the needle image)
-                window_screenshot = window_screenshot.resize(self.macro_resolution)
-            window_screenshot = window_screenshot.resize(self.macro_resolution)
+            if scale_needle_image:
+                image = self._scale_needle_image_with_lcm(image, window_size)
 
         # finding all matches for the image
         matches = self.window_manager.locate_all(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
 
+        # turning the matches from a generator into a list
+        matches_list = [match for match in matches]
+
+        # if we scaled things up, we scale them back down to
+        if self.macro_resolution is not None and scale_haystack_image:
+            # calculating scale
+            scale_x = lcm(window_size[0], self.macro_resolution[0]) / self.macro_resolution[0]
+            scale_y = lcm(window_size[1], self.macro_resolution[1]) / self.macro_resolution[1]
+
+            for i, match in enumerate(matches_list):
+                # scaling everything
+                matches_list[i] = Box(int(match.left / scale_x), int(match.top / scale_y), int(match.width / scale_x), int(match.height / scale_y))
+
         # returning the matches
-        return matches
+        return matches_list
 
     def locate_center_on_window(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         *,
         min_search_time: float = 0,
         grayscale: bool | None = None,
-        limit=None,
+        limit: int = 1,
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-        scale: bool = True,
-        scale_image: bool = True,
+        scale_haystack_image: bool = True,
+        scale_needle_image: bool = True,
         needle_image_resampling: int = Resampling.BICUBIC,
-        haystack_image_resampling: int = Resampling.BICUBIC,
     ) -> Point | None:
         '''This is pretty much a wrapper for pyscreeze.locate_all, but we also implement some scaling logic,
         and also taking screenshots. So, for more help regarding the how stuff is found, check out there first!
@@ -444,39 +504,45 @@ class BasicWindow:
         you're using to search (the needle image) could get scaled from like 10x10 to 11x12, and that's gonna be
         very blurry. So try to design macros with higher resolutions then the real world when possible.
         
-        :param bool scale: If the given output should be scaled according to the macro resolution (if set)
-        :param bool scale_image: If the given image should be scaled along with everything else
+        :param bool scale_needle_image: If the given image should be scaled to a happy medium with the haystack image (their lowest common multiple)
+        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)
         :param int needle_image_resampling: How to rescale the image we're using to search. This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.
         :param int haystack_image_resampling: How to rescale the image we're searching (the screenshot of the window in this case). This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.'''
         # capturing the window
         window_screenshot = self.screenshot()
 
+        # getting the size of the window from the screenshot we just took
+        window_size = window_screenshot.size
+
         # if we were given the path to an image, opening it
         if type(image) == str:
-            image: Image.Image = Image.open(image)
+            image = Image.open(image)
 
-        # if we're supposed to scale the image we're looking for, scaling the image
-        # we scale both the screenshot, and the image we're looking for
-        if scale:
-            # getting the scale
-            scale_x, scale_y = self.get_scale()
+        # only checking what stuff we're supposed to scale if we would even do anything
+        if self.macro_resolution is not None:
+            if scale_haystack_image:
+                window_screenshot = self._scale_window_screenshot_with_lcm(window_screenshot)
 
-            # if the scale isn't (1, 1) (meaning we have to actually
-            # scale stuff ):
-            if (scale_x, scale_y) != (1, 1):
-                # scaling the image IF we're supposed to
-                if scale_image:
-                    # scaling the image we're looking for (the haystack image)
-                    image = image.resize((
-                        ceil(image.size[0] / scale_x),
-                        ceil(image.size[1] / scale_y)
-                    ), resample=needle_image_resampling)
+            window_screenshot.save('w-screenshot.png')
 
-                # scaling the image we're searching in (the needle image)
-                window_screenshot = window_screenshot.resize(self.macro_resolution, resample=haystack_image_resampling)
+            if scale_needle_image:
+                image = self._scale_needle_image_with_lcm(image, window_size)
 
         # finding a match for the image
         match = self.window_manager.locate_center(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+
+        # if we got None, returning that
+        if match is None:
+            return None
+
+        # if we scaled things up, we scale them back down to
+        # the macro resolution
+        if self.macro_resolution is not None and scale_haystack_image:
+            # calculating scale
+            scale_x = lcm(window_size[0], self.macro_resolution[0]) / self.macro_resolution[0]
+            scale_y = lcm(window_size[1], self.macro_resolution[1]) / self.macro_resolution[1]
+
+            return(Point(int(match.x / scale_x), int(match.y / scale_y)))
 
         # returning the matches
         return match
