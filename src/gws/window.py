@@ -327,7 +327,6 @@ class BasicWindow:
     def locate_on_window(
         self,
         image: str | Image.Image,
-        min_search_time: float = 0,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -336,8 +335,6 @@ class BasicWindow:
         confidence: float = 0.999,
         scale_haystack_image: bool = True,
         scale_needle_image: bool = True,
-        needle_image_resampling: int = Resampling.BICUBIC,
-        haystack_image_resampling: int = Resampling.BICUBIC,
     ) -> Box | None:
         '''This is pretty much a wrapper for pyscreeze.locate, but we also implement some scaling logic,
         and also taking screenshots. So, for more help regarding the how stuff is found, check out there first!
@@ -353,14 +350,12 @@ class BasicWindow:
         confidence (0 is anything matches 1 is exact pixel 
         to pixel match)
 
-        Warning, if you're using choose_image_size_with_lowest_common_multiple, it'll scale images when
+        Warning, when scaling with the lowest common multiple, it'll scale images when
         finding stuff to the lowest common multiple, which is great for accuracy, but not great for
-        speed.
+        speed, and if it's a different aspect ratio, you're gonna want A LOT of ram.
         
         :param bool scale_needle_image: If the given image should be scaled to a happy medium with the haystack image (their lowest common multiple)
-        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)
-        :param int needle_image_resampling: How to rescale the image we're using to search . This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.
-        :param int haystack_image_resampling: How to rescale the image we're searching (the screenshot of the window in this case). This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.'''
+        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)'''
         # capturing the window
         window_screenshot = self.screenshot()
 
@@ -409,8 +404,6 @@ class BasicWindow:
         confidence: float = 0.999,
         scale_haystack_image: bool = True,
         scale_needle_image: bool = True,
-        needle_image_resampling: int = Resampling.BICUBIC,
-        haystack_image_resampling: int = Resampling.BICUBIC,
     ) -> list[Box]:
         '''This is pretty much a wrapper for pyscreeze.locate_all, but we also implement some scaling logic,
         and also taking screenshots. So, for more help regarding the how stuff is found, check out there first!
@@ -424,16 +417,13 @@ class BasicWindow:
         How well the image has to match part of the other image is set by confidence. Also, there's scaling,
         meaning if you designed the macro/whatever you're doing for one resolution, but the window is another,
         it can automatically scale it for you. 
-        
-        Also, be warned, that if you're designed resolution is lower than the size of the window, or is 
-        just a little bigger, (like window is 2500x1000, and macro was designed for 2600x1200), then the image
-        you're using to search (the needle image) could get scaled from like 10x10 to 11x12, and that's gonna be
-        very blurry. So try to design macros with higher resolutions then the real world when possible.
+
+        Warning, when scaling with the lowest common multiple, it'll scale images when
+        finding stuff to the lowest common multiple, which is great for accuracy, but not great for
+        speed, and if it's a different aspect ratio, you're gonna want A LOT of ram.
         
         :param bool scale_needle_image: If the given image should be scaled to a happy medium with the haystack image (their lowest common multiple)
-        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)
-        :param int needle_image_resampling: How to rescale the image we're using to search. This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.
-        :param int haystack_image_resampling: How to rescale the image we're searching (the screenshot of the window in this case). This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.'''
+        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)'''
 
         # capturing the window
         window_screenshot = self.screenshot()
@@ -476,7 +466,6 @@ class BasicWindow:
         self,
         image: str | Image.Image,
         *,
-        min_search_time: float = 0,
         grayscale: bool | None = None,
         limit: int = 1,
         region: tuple[int, int, int, int] | None = None,
@@ -484,7 +473,6 @@ class BasicWindow:
         confidence: float = 0.999,
         scale_haystack_image: bool = True,
         scale_needle_image: bool = True,
-        needle_image_resampling: int = Resampling.BICUBIC,
     ) -> Point | None:
         '''This is pretty much a wrapper for pyscreeze.locate_all, but we also implement some scaling logic,
         and also taking screenshots. So, for more help regarding the how stuff is found, check out there first!
@@ -498,16 +486,13 @@ class BasicWindow:
         window, then returns the first thing that matches (well enough, how well is decided by confidence)
         the needle image. The only difference, is that instead of returning a rectangle for where it found
         the match, it just returns the center of it.
-        
-        Also, be warned, that if you're designed resolution is lower than the size of the window, or is 
-        just a little bigger, (like window is 2500x1000, and macro was designed for 2600x1200), then the image
-        you're using to search (the needle image) could get scaled from like 10x10 to 11x12, and that's gonna be
-        very blurry. So try to design macros with higher resolutions then the real world when possible.
+
+        Warning, when scaling with the lowest common multiple, it'll scale images when
+        finding stuff to the lowest common multiple, which is great for accuracy, but not great for
+        speed, and if it's a different aspect ratio, you're gonna want A LOT of ram.
         
         :param bool scale_needle_image: If the given image should be scaled to a happy medium with the haystack image (their lowest common multiple)
-        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)
-        :param int needle_image_resampling: How to rescale the image we're using to search. This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.
-        :param int haystack_image_resampling: How to rescale the image we're searching (the screenshot of the window in this case). This is directly passed to PIL.Image.Image.resize. From those docs is the following An optional resampling filter. This can be one of Resampling.NEAREST, Resampling.BOX, Resampling.BILINEAR, Resampling.HAMMING, Resampling.BICUBIC or Resampling.LANCZOS. If the image has mode "1" or "P", it is always set to Resampling.NEAREST. Otherwise, the default filter is Resampling.BICUBIC. See: concept-filters.'''
+        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)'''
         # capturing the window
         window_screenshot = self.screenshot()
 
