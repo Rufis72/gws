@@ -27,38 +27,41 @@ class WindowLike(Protocol):
     def get_pixel(self, x: int, y: int, scale: bool = True) -> tuple[int, int, int, int]: ...
     def locate_on_window(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-        scale: bool = True,
+        scale_haystack_image: bool = True,
+        scale_needle_image: bool = True,
     ) -> Box | None: ...
 
     def locate_all_on_window(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 10000,
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-        scale: bool = True,
-    ) -> Generator[Box, None, None]: ...
+        scale_haystack_image: bool = True,
+        scale_needle_image: bool = True,
+    ) -> list[Box]: ...
 
     def locate_center_on_window(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-        scale: bool = True,
+        scale_haystack_image: bool = True,
+        scale_needle_image: bool = True,
     ) -> Point | None: ...
 
 class GetWindowFn(Protocol):
@@ -102,7 +105,7 @@ class WindowManagerLike(Protocol):
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-    ) -> Generator[Box, None, None]: ...
+    ) -> list[Box]: ...
 
     def locate_on_screen(
         self,
@@ -124,7 +127,7 @@ class WindowManagerLike(Protocol):
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-    ) -> Generator[Box, None, None]: ...
+    ) -> list[Box]: ...
 
     def locate_center(
         self,

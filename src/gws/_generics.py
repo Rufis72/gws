@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Generator
 from PIL import Image
 from io import BytesIO
 import pyscreeze
+from pyscreeze import Box
 
 if TYPE_CHECKING:
     from gws._typing import WindowLikeType, WindowLike
@@ -198,10 +199,12 @@ class GenericWindowManager(metaclass=ABCMeta):
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-    ) -> Generator[pyscreeze.Box, None, None]:
+    ) -> list[Box]:
         '''This is a wrapper for pyscreeze.locateAll, so refer to there for documentation.
-        Pyautogui also pretty much wraps pyscreeze, so they may have useful docs over there too.'''
-        return pyscreeze.locateAll(needle_image, haystack_image, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+        Pyautogui also pretty much wraps pyscreeze, so they may have useful docs over there too.
+        
+        The only difference is that this returns a list[Box] instead of a generator'''
+        return [match for match in pyscreeze.locateAll(needle_image, haystack_image, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)]
 
     def locate_on_screen(
         self,
@@ -212,7 +215,7 @@ class GenericWindowManager(metaclass=ABCMeta):
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-    ) -> pyscreeze.Box | None:
+    ) -> Box | None:
         '''This is almost a wrapper for pyscreeze.locateAll, so refer to there for documentation.
         Pyautogui also pretty much wraps pyscreeze, so they may have useful docs over there too.
         The reason this is almost a wrapper, is because we use our own screenshot utility for wayland,
@@ -235,7 +238,7 @@ class GenericWindowManager(metaclass=ABCMeta):
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
-    ) -> Generator[pyscreeze.Box, None, None]:
+    ) -> list[Box]:
         '''This is almost a wrapper for pyscreeze.locateAll, so refer to there for documentation.
         Pyautogui also pretty much wraps pyscreeze, so they may have useful docs over there too.
         The reason this is almost a wrapper, is because we use our own screenshot utility for wayland,
