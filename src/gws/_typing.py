@@ -2,9 +2,7 @@ from typing import Protocol
 from typing_extensions import TypeAlias, Type
 from gws.window import BasicWindow
 from PIL import Image
-from typing import Any
 from pyscreeze import Box, Point
-from typing import Generator
 
 class WindowLike(Protocol):
     id: str
@@ -86,8 +84,8 @@ class WindowManagerLike(Protocol):
     def list_window_names(self) -> list[str]: ...
     def locate(
         self,
-        needle_image: str | Image.Image | Any,
-        haystack_image: str | Image.Image | Any,
+        needle_image: str | Image.Image,
+        haystack_image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -98,8 +96,8 @@ class WindowManagerLike(Protocol):
 
     def locate_all(
         self,
-        needle_image: str | Image.Image | Any,
-        haystack_image: str | Image.Image | Any,
+        needle_image: str | Image.Image,
+        haystack_image: str | Image.Image,
         grayscale: bool | None = None,
         limit: int = 10000,
         region: tuple[int, int, int, int] | None = None,
@@ -109,7 +107,7 @@ class WindowManagerLike(Protocol):
 
     def locate_on_screen(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -120,7 +118,7 @@ class WindowManagerLike(Protocol):
 
     def locate_all_on_screen(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 10000,
@@ -131,8 +129,8 @@ class WindowManagerLike(Protocol):
 
     def locate_center(
         self,
-        needle_image: str | Image.Image | Any,
-        haystack_image: str | Image.Image | Any,
+        needle_image: str | Image.Image,
+        haystack_image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -143,7 +141,7 @@ class WindowManagerLike(Protocol):
 
     def locate_center_on_screen(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 1,

@@ -5,7 +5,7 @@ import subprocess
 from gws._errors import DependencyNotFound
 from gws.window import BasicWindow
 from gws._dependency_management import requires_grim, requires_wayland_utils, requires_wtype
-from typing import TYPE_CHECKING, Any, Generator
+from typing import TYPE_CHECKING
 from PIL import Image
 from io import BytesIO
 import pyscreeze
@@ -177,8 +177,8 @@ class GenericWindowManager(metaclass=ABCMeta):
 
     def locate(
         self,
-        needle_image: str | Image.Image | Any,
-        haystack_image: str | Image.Image | Any,
+        needle_image: str | Image.Image,
+        haystack_image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -192,8 +192,8 @@ class GenericWindowManager(metaclass=ABCMeta):
 
     def locate_all(
         self,
-        needle_image: str | Image.Image | Any,
-        haystack_image: str | Image.Image | Any,
+        needle_image: str | Image.Image,
+        haystack_image: str | Image.Image,
         grayscale: bool | None = None,
         limit: int = 10000,
         region: tuple[int, int, int, int] | None = None,
@@ -208,7 +208,7 @@ class GenericWindowManager(metaclass=ABCMeta):
 
     def locate_on_screen(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -231,7 +231,7 @@ class GenericWindowManager(metaclass=ABCMeta):
 
     def locate_all_on_screen(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 10000,
@@ -255,8 +255,8 @@ class GenericWindowManager(metaclass=ABCMeta):
     
     def locate_center(
         self,
-        needle_image: str | Image.Image | Any,
-        haystack_image: str | Image.Image | Any,
+        needle_image: str | Image.Image,
+        haystack_image: str | Image.Image,
         *,
         grayscale: bool | None = None,
         limit: int = 1,
@@ -281,7 +281,7 @@ class GenericWindowManager(metaclass=ABCMeta):
 
     def locate_center_on_screen(
         self,
-        image: str | Image.Image | Any,
+        image: str | Image.Image,
         *,
         min_search_time: float = 0,
         grayscale: bool | None = None,
@@ -298,7 +298,7 @@ class GenericWindowManager(metaclass=ABCMeta):
         This function is the same as locate_on_screen, but instead of returning the top left corner,
         it returns the center.'''
         # locating the image on the screen
-        match_coords = self.locate_on_screen(image, min_search_time, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
+        match_coords = self.locate_on_screen(image, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
 
         # if we couldn't find a match we return none
         if match_coords is None:
