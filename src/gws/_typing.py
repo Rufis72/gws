@@ -32,8 +32,10 @@ class WindowLike(Protocol):
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
+        scale_with_lcm: bool = False,
         scale_haystack_image: bool = True,
         scale_needle_image: bool = True,
+        haystack_scaling_resampling: int = Image.Resampling.BICUBIC,
     ) -> Box | None: ...
 
     def locate_all_on_window(
@@ -45,8 +47,10 @@ class WindowLike(Protocol):
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
+        scale_with_lcm: bool = False,
         scale_haystack_image: bool = True,
         scale_needle_image: bool = True,
+        haystack_scaling_resampling: int = Image.Resampling.BICUBIC,
     ) -> list[Box]: ...
 
     def locate_center_on_window(
@@ -58,8 +62,10 @@ class WindowLike(Protocol):
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
+        scale_with_lcm: bool = False,
         scale_haystack_image: bool = True,
         scale_needle_image: bool = True,
+        haystack_scaling_resampling: int = Image.Resampling.BICUBIC,
     ) -> Point | None: ...
 
 class GetWindowFn(Protocol):

@@ -299,11 +299,18 @@ class BasicWindow:
             # scaling and returning the window
             return screenshot.resize(scaled_screenshot_size)
         
-    def _scale_needle_image_with_lcm(self, image: Image.Image, window_size: None | tuple[int, int] = None) -> Image.Image:
-        '''Scales the needle image by the same scale factor the window screenshot would be scaled by
+    def _scale_needle_image_from_scaled_screenshot(self, image: Image.Image, scaled_screenshot_size: tuple[int, int], window_size: None | tuple[int, int] = None) -> Image.Image:
+        '''Scales the needle image by the same scale factor the window screenshot seems like it was
+        relative to the macro resolution. 
+        
+        This means that if the macro resolution is 1920x1080, and the screenshot is 1920x1080, then
+        the scale (1, 1), so we scale the image by (1, 1). If we the macro resolution was still 1920x1080,
+        but the screenshot was instead 3840x2160, then the scale'd be (2, 2), so the image would be 
+        scaled by that
         
         :param PIL.Image.Image image: The needle image to scale
-        :param None | tuple[int, int] window_size: The size of the window, if not passed we can get it on our own'''
+        :param scaled_screenshot_size
+        :param None | tuple[int, int] window_size: The current size of the window, if not passed we can get it on our own'''
         # if there's no macro resolution, we don't scale anything
         if self.macro_resolution is None:
             return image
@@ -313,8 +320,12 @@ class BasicWindow:
             window_size = self.get_size()
 
         # first we calculate the scale factor we would/are scale the haystack image by
-        scale_x = lcm(window_size[0], self.macro_resolution[0]) / window_size[0]
-        scale_y = lcm(window_size[1], self.macro_resolution[1]) / window_size[1]
+        scale_x = scaled_screenshot_size[0] / window_size[0]
+        scale_y = scaled_screenshot_size[1] / window_size[1]
+
+        # if we'd just be scaling it by (1, 1), we return the image
+        if scale_x == 1 and scale_y == 1:
+            return image
 
         scaled_image = image.resize((
             int(image.size[0] * scale_x),
@@ -333,8 +344,10 @@ class BasicWindow:
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
+        scale_with_lcm: bool = False,
         scale_haystack_image: bool = True,
         scale_needle_image: bool = True,
+        haystack_scaling_resampling: int = Resampling.BICUBIC,
     ) -> Box | None:
         '''This is pretty much a wrapper for pyscreeze.locate, but we also implement some scaling logic,
         and also taking screenshots. So, for more help regarding the how stuff is found, check out there first!
@@ -350,12 +363,20 @@ class BasicWindow:
         confidence (0 is anything matches 1 is exact pixel 
         to pixel match)
 
-        Warning, when scaling with the lowest common multiple, it'll scale images when
-        finding stuff to the lowest common multiple, which is great for accuracy, but not great for
-        speed, and if it's a different aspect ratio, you're gonna want A LOT of ram.
+        There's two different kinds of scaling for images, the faster one that won't crash the
+        program, and only scales up to macro resolution, and one that scales past the macro resolution
+        to improve quality to the point where it's almost indistinguishable from from not scaling at all.
+        The second option works amazingly when you know the aspect ratio will stay the same. (Like fullscreen
+        on a 16:9 monitor.) However, if you cannot garuntee that, unless you've got A LOT of ram and CPU,
+        you probably don't want to enable it.
         
+        :param bool scale_with_lcm: This toggles if we should scale up to a resolution past (or equal to) to macro resolution, so we can make sure the 
+        scale up and down will all be whole numbers. This improves accuracy to the point where you can't tell there's scaling happening most of the time, 
+        but also takes far more ram. In some cases, it can take over 100gb of ram, so only use this when you need the accuracy, and can garuntee the aspect
+        ratio will be similar. (Like fullscreen on a 16:9 monitor)
         :param bool scale_needle_image: If the given image should be scaled to a happy medium with the haystack image (their lowest common multiple)
-        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)'''
+        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)
+        :param int haystack_scaling_resampling: If we scale the haystack image (the screenshot of the window here), what resampling we should use. This is only used for non-lcm scaling'''
         # capturing the window
         window_screenshot = self.screenshot()
 
@@ -366,13 +387,18 @@ class BasicWindow:
         if type(image) == str:
             image = Image.open(image)
 
-        # only checking what stuff we're supposed to scale if we would even do anything
-        if self.macro_resolution is not None:
+        # only scaling if we would scale anything in the first place
+        if self.macro_resolution is not None and self.macro_resolution != window_size:
             if scale_haystack_image:
-                window_screenshot = self._scale_window_screenshot_with_lcm(window_screenshot)
+                if scale_with_lcm:
+                    window_screenshot = self._scale_window_screenshot_with_lcm(window_screenshot)
+                else:
+                    window_screenshot = window_screenshot.resize(self.macro_resolution, resample=haystack_scaling_resampling)
 
             if scale_needle_image:
-                image = self._scale_needle_image_with_lcm(image, window_size)
+                # the logic is always the same for scaling the needle image,
+                # scale it by however much the window screenshot was scaled by
+                image = self._scale_needle_image_from_scaled_screenshot(image, window_screenshot.size, window_size)
 
         # finding a match for the image
         match = self.window_manager.locate(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
@@ -381,9 +407,10 @@ class BasicWindow:
         if match is None:
             return None
 
-        # if we scaled things up, we scale them back down to
-        # the macro resolution
-        if self.macro_resolution is not None and scale_haystack_image:
+        # if we scaled things up with LCM, meaning
+        # we scaled beyond the macro resolution,
+        # we scale back down to the macro resolution
+        if self.macro_resolution is not None and scale_haystack_image and scale_with_lcm:
             # calculating scale
             scale_x = lcm(window_size[0], self.macro_resolution[0]) / self.macro_resolution[0]
             scale_y = lcm(window_size[1], self.macro_resolution[1]) / self.macro_resolution[1]
@@ -402,8 +429,10 @@ class BasicWindow:
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
+        scale_with_lcm: bool = False,
         scale_haystack_image: bool = True,
         scale_needle_image: bool = True,
+        haystack_scaling_resampling: int = Resampling.BICUBIC,
     ) -> list[Box]:
         '''This is pretty much a wrapper for pyscreeze.locate_all, but we also implement some scaling logic,
         and also taking screenshots. So, for more help regarding the how stuff is found, check out there first!
@@ -418,12 +447,20 @@ class BasicWindow:
         meaning if you designed the macro/whatever you're doing for one resolution, but the window is another,
         it can automatically scale it for you. 
 
-        Warning, when scaling with the lowest common multiple, it'll scale images when
-        finding stuff to the lowest common multiple, which is great for accuracy, but not great for
-        speed, and if it's a different aspect ratio, you're gonna want A LOT of ram.
+        There's two different kinds of scaling for images, the faster one that won't crash the
+        program, and only scales up to macro resolution, and one that scales past the macro resolution
+        to improve quality to the point where it's almost indistinguishable from from not scaling at all.
+        The second option works amazingly when you know the aspect ratio will stay the same. (Like fullscreen
+        on a 16:9 monitor.) However, if you cannot garuntee that, unless you've got A LOT of ram and CPU,
+        you probably don't want to enable it.
         
+        :param bool scale_with_lcm: This toggles if we should scale up to a resolution past (or equal to) to macro resolution, so we can make sure the 
+        scale up and down will all be whole numbers. This improves accuracy to the point where you can't tell there's scaling happening most of the time, 
+        but also takes far more ram. In some cases, it can take over 100gb of ram, so only use this when you need the accuracy, and can garuntee the aspect
+        ratio will be similar. (Like fullscreen on a 16:9 monitor)
         :param bool scale_needle_image: If the given image should be scaled to a happy medium with the haystack image (their lowest common multiple)
-        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)'''
+        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)
+        :param int haystack_scaling_resampling: If we scale the haystack image (the screenshot of the window here), what resampling we should use. This is only used for non-lcm scaling'''
 
         # capturing the window
         window_screenshot = self.screenshot()
@@ -435,13 +472,18 @@ class BasicWindow:
         if type(image) == str:
             image = Image.open(image)
 
-        # only checking what stuff we're supposed to scale if we would even do anything
-        if self.macro_resolution is not None:
+        # only scaling if we would scale anything in the first place
+        if self.macro_resolution is not None and self.macro_resolution != window_size:
             if scale_haystack_image:
-                window_screenshot = self._scale_window_screenshot_with_lcm(window_screenshot)
+                if scale_with_lcm:
+                    window_screenshot = self._scale_window_screenshot_with_lcm(window_screenshot)
+                else:
+                    window_screenshot = window_screenshot.resize(self.macro_resolution, resample=haystack_scaling_resampling)
 
             if scale_needle_image:
-                image = self._scale_needle_image_with_lcm(image, window_size)
+                # the logic is always the same for scaling the needle image,
+                # scale it by however much the window screenshot was scaled by
+                image = self._scale_needle_image_from_scaled_screenshot(image, window_screenshot.size, window_size)
 
         # finding all matches for the image
         matches = self.window_manager.locate_all(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
@@ -449,8 +491,10 @@ class BasicWindow:
         # turning the matches from a generator into a list
         matches_list = [match for match in matches]
 
-        # if we scaled things up, we scale them back down to
-        if self.macro_resolution is not None and scale_haystack_image:
+        # if we scaled things up with LCM, meaning
+        # we scaled beyond the macro resolution,
+        # we scale back down to the macro resolution
+        if self.macro_resolution is not None and scale_haystack_image and scale_with_lcm:
             # calculating scale
             scale_x = lcm(window_size[0], self.macro_resolution[0]) / self.macro_resolution[0]
             scale_y = lcm(window_size[1], self.macro_resolution[1]) / self.macro_resolution[1]
@@ -471,8 +515,10 @@ class BasicWindow:
         region: tuple[int, int, int, int] | None = None,
         step: int = 1,
         confidence: float = 0.999,
+        scale_with_lcm: bool = False,
         scale_haystack_image: bool = True,
         scale_needle_image: bool = True,
+        haystack_scaling_resampling: int = Resampling.BICUBIC
     ) -> Point | None:
         '''This is pretty much a wrapper for pyscreeze.locate_all, but we also implement some scaling logic,
         and also taking screenshots. So, for more help regarding the how stuff is found, check out there first!
@@ -487,12 +533,21 @@ class BasicWindow:
         the needle image. The only difference, is that instead of returning a rectangle for where it found
         the match, it just returns the center of it.
 
-        Warning, when scaling with the lowest common multiple, it'll scale images when
-        finding stuff to the lowest common multiple, which is great for accuracy, but not great for
-        speed, and if it's a different aspect ratio, you're gonna want A LOT of ram.
-        
+        There's two different kinds of scaling for images, the faster one that won't crash the
+        program, and only scales up to macro resolution, and one that scales past the macro resolution
+        to improve quality to the point where it's almost indistinguishable from from not scaling at all, then
+        scales back down to macro resolution.
+        The second option works amazingly when you know the aspect ratio will stay the same. (Like fullscreen
+        on a 16:9 monitor.) However, if you cannot garuntee that, unless you've got A LOT of ram and CPU,
+        you probably don't want to enable it.
+
+        :param bool scale_with_lcm: This toggles if we should scale up to a resolution past (or equal to) to macro resolution, so we can make sure the 
+        scale up and down will all be whole numbers. This improves accuracy to the point where you can't tell there's scaling happening most of the time, 
+        but also takes far more ram. In some cases, it can take over 100gb of ram, so only use this when you need the accuracy, and can garuntee the aspect
+        ratio will be similar. (Like fullscreen on a 16:9 monitor)
         :param bool scale_needle_image: If the given image should be scaled to a happy medium with the haystack image (their lowest common multiple)
-        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)'''
+        :param bool scale_haysatack_image: If the screenshot should be scaled to a happy medium with the needle image (their lowest common multiple)
+        :param int haystack_scaling_resampling: If we scale the haystack image (the screenshot of the window here), what resampling we should use. This is only used for non-lcm scaling'''
         # capturing the window
         window_screenshot = self.screenshot()
 
@@ -503,15 +558,18 @@ class BasicWindow:
         if type(image) == str:
             image = Image.open(image)
 
-        # only checking what stuff we're supposed to scale if we would even do anything
-        if self.macro_resolution is not None:
+        # only scaling if we would scale anything in the first place
+        if self.macro_resolution is not None and self.macro_resolution != window_size:
             if scale_haystack_image:
-                window_screenshot = self._scale_window_screenshot_with_lcm(window_screenshot)
-
-            window_screenshot.save('w-screenshot.png')
+                if scale_with_lcm:
+                    window_screenshot = self._scale_window_screenshot_with_lcm(window_screenshot)
+                else:
+                    window_screenshot = window_screenshot.resize(self.macro_resolution, resample=haystack_scaling_resampling)
 
             if scale_needle_image:
-                image = self._scale_needle_image_with_lcm(image, window_size)
+                # the logic is always the same for scaling the needle image,
+                # scale it by however much the window screenshot was scaled by
+                image = self._scale_needle_image_from_scaled_screenshot(image, window_screenshot.size, window_size)
 
         # finding a match for the image
         match = self.window_manager.locate_center(image, window_screenshot, grayscale=grayscale, limit=limit, region=region, step=step, confidence=confidence)
@@ -520,9 +578,10 @@ class BasicWindow:
         if match is None:
             return None
 
-        # if we scaled things up, we scale them back down to
-        # the macro resolution
-        if self.macro_resolution is not None and scale_haystack_image:
+        # if we scaled things up with LCM, meaning
+        # we scaled beyond the macro resolution,
+        # we scale back down to the macro resolution
+        if self.macro_resolution is not None and scale_haystack_image and scale_with_lcm:
             # calculating scale
             scale_x = lcm(window_size[0], self.macro_resolution[0]) / self.macro_resolution[0]
             scale_y = lcm(window_size[1], self.macro_resolution[1]) / self.macro_resolution[1]
