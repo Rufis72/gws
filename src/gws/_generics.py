@@ -308,7 +308,7 @@ class GenericWindowManager(metaclass=ABCMeta):
             return pyscreeze.center(match_coords)
         
 
-    def get_pixel(self, x: int, y: int) -> tuple[int, int, int, int]:
+    def get_pixel(self, x: int, y: int) -> tuple[int, int, int, int] | None:
         '''Returns a RGBA tuple of a pixel on the screen.
         
         This method literally takes a screenshot of the
