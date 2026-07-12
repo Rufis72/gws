@@ -502,6 +502,17 @@ class GenericWaylandWindowManager(GenericWindowManager):
                 raise DependencyNotFound(f'An error was encountered when trying to run wtype, which appears to be related to it not being on PATH/not being installed. Do you have wtype installed? This is the given error message: \n{e}')
             else:
                 raise Exception(f'Got an error when running "wtype -p {key}": {e}')
+            
+    @requires_wtype
+    def typewrite(self, text: str, interval: float = 0.1):
+        try:
+            interval_command = []
+            if interval != 0:
+                interval_command = ['-d', str(int(interval * 1000))]
+            print(['wtype', *interval_command, text])
+            subprocess.run(['wtype', *interval_command, text])
+        except subprocess.CalledProcessError as e:
+            raise Exception(f'Got an error when running "": {e}')
     
     @requires_grim
     def screenshot_region(self, x: int, y: int, width: int, height: int) -> Image.Image:
