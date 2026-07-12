@@ -34,7 +34,7 @@ limited pyautogui. But, it's useful to know what your window manager can do, so
 here's a few examples:
 
 * .click, this lets you, well, click. The keys are 'left', 'middle', and 'right' This'll be important later.
-* .press, .key_down, .key_up This lets you press/release/hold a key for some time
+* .press, .key_down, .key_up This lets you press/release/send a "key pressed event". That means you just tell an app a key was pressed
 * .screenshot, .screenshot_region, these let you screenshot your entire screen, or only a specific portion
 * .list_window_names, this lists all open window's names
 * .get_window_from_name, .get_window_from_regex, these return a (by default) BasicWindow object for a window
@@ -288,14 +288,13 @@ Typing things
 Finally, we're onto our final step, typing. In GWS, this is quite simple.
 There's a few methods, typewrite, key_down, key_up, and press
 
-typewrite just writes text you give it. It can have pauses between characters, and you
-can tell it how long to hold it for
+typewrite just writes text you give it. It can have pauses between characters
 
 key_down presses a key down
 
 key_up releases a key
 
-press presses a key down, waits some amount of time, then releases it.
+press presses a key. Meaning, it only sends a key pressed event. Apps don't know how long a key was pressed, they just know "a" was pressed once, or "b" or "3" or whatever
 
 For this, we're gonna click in the general area of where the terminal normally appears,
 then typewrite what we need to.
@@ -355,7 +354,7 @@ then typewrite what we need to.
     vs_code_window.typewrite('echo "hello, world"')
 
     # entering the text
-    vs_code_window.press('enter', 0.5)
+    vs_code_window.press('enter')
 
 Closing remarks, and other
 #############################
