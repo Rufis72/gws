@@ -178,13 +178,12 @@ class BasicWindow:
         '''Returns the current size of the window'''
         return self.window_manager.get_size_of_window(self.id)
     
-    def typewrite(self, text: str, hold_duration: float = 0.09, spacing_duration: float = 0):
+    def typewrite(self, text: str, interval: float = 0):
         '''Types characters, holding each one for a given time, and with a given duration between each key press.
         
         :param str text: The text to typewrite
-        :param float hold_duration: The duration to hold each key
         :param float interval: The duration to wait between each key press'''
-        self.window_manager.typewrite(text, hold_duration, spacing_duration)
+        self.window_manager.typewrite(text, interval)
 
     def screenshot(self) -> Image.Image:
         '''Takes a screenshot of the entire window, returns it as a Pillow Image.'''

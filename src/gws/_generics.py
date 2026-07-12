@@ -135,7 +135,7 @@ class GenericWindowManager(metaclass=ABCMeta):
         time.sleep(duration)
         self.key_up(key)
 
-    def typewrite(self, text: str, hold_duration: float = 0.09, interval: float = 0):
+    def typewrite(self, text: str, interval: float = 0):
         '''Types characters, holding each one for a given time, and with a given duration between each key press.
         
         :param str text: The text to typewrite
@@ -143,7 +143,7 @@ class GenericWindowManager(metaclass=ABCMeta):
         :param float interval: The duration to wait between each key press'''
         for i, char in enumerate(text):
             # pressing the key
-            self.press(char, hold_duration)
+            self.press(char)
 
             # waiting the interval between each key press unless this
             # is the last character
@@ -547,6 +547,10 @@ class GenericNonWaylandWindowManager(GenericWindowManager):
     def key_up(self, key: str):
         import pyautogui
         pyautogui.keyUp(key)
+
+    def typewrite(self, text: str, interval: float = 0):
+        import pyautogui
+        pyautogui.typewrite(text, interval)
 
     def mouse_down(self, button: str, x: int | None = None, y: int | None = None):
         import pyautogui
